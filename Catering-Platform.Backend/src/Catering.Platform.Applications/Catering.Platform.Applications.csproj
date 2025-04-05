@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Catering.Platform.Domain\Catering.Platform.Domain.csproj" />
+    <ProjectReference Include="..\Catering.Platform.Persistence\Catering.Platform.Persistence.csproj" />
+  </ItemGroup>
+
 </Project>
