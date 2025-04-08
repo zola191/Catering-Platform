@@ -8,21 +8,21 @@ namespace Catering.Platform.Applications.Services;
 internal sealed class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _repository;
-    private readonly IUnidOfWork _unidOfWork;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CategoryService> _logger;
-    public CategoryService(ICategoryRepository repository, IUnidOfWork unidOfWork, ILogger<CategoryService> logger)
+    public CategoryService(ICategoryRepository repository, IUnitOfWork unitOfWork, ILogger<CategoryService> logger)
     {
         _repository = repository;
-        _unidOfWork = unidOfWork;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
-    //CategoryViewModel
+    // CategoryViewModel
     public async Task<Guid> AddAsync(Category entity, CancellationToken cancellationToken)
     {
         try
         {
             var result = await _repository.AddAsync(entity, cancellationToken);
-            await _unidOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;
         }
         catch (Exception ex)
@@ -41,7 +41,7 @@ internal sealed class CategoryService : ICategoryService
         try
         {
             _repository.Delete(entity);
-            await _unidOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -69,8 +69,9 @@ internal sealed class CategoryService : ICategoryService
         }
     }
 
-    //минусы интерполяции, логгер для каждого вхождения будет создавать отдельную подстроку что съедает память для форматирования, актуально когда logdebagger
-    //с placeholder logger работает более оптимально
+    // минусы интерполяции, логгер для каждого вхождения будет создавать
+    // отдельную подстроку что съедает память для форматирования, актуально когда logdebagger
+    // с placeholder logger работает более оптимально
 
     public Task<Category?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -91,7 +92,7 @@ internal sealed class CategoryService : ICategoryService
         try
         {
             var result = _repository.Update(entity);
-            await _unidOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;
         }
         catch (Exception ex)
@@ -99,7 +100,10 @@ internal sealed class CategoryService : ICategoryService
             // добавить полный слепок как в AddAsync, с указанием старого состояния и нового состояния,
             // актуально для финтех/медицинские где цена ошибки высока
             _logger.LogError(
-            "Unable to update category by id {Id}. See Details: {Details}", entity.Id, ex.Message);
+                "Unable to update category {Name}, {Description}. See Details: {Details}",
+                entity.Name,
+                entity.Description,
+                ex.Message);
             throw;
         }
     }
