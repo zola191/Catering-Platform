@@ -1,5 +1,5 @@
-﻿using Catering.Platform.Applications.Services;
-using Catering.Platform.Domain.Services;
+﻿using Catering.Platform.Applications.Abstractions;
+using Catering.Platform.Applications.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Catering.Platform.Applications.Extensions;

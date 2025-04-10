@@ -1,7 +1,18 @@
-﻿namespace Catering.Platform.Domain.Requests;
+﻿using Catering.Platform.Domain.Models;
 
-public class UpdateCategoryRequest
+namespace Catering.Platform.Domain.Requests;
+
+public record UpdateCategoryRequest
 {
     public string Name { get; set; }
     public string? Description { get; set; }
+
+    public static Category UpdateFrom(Category category)
+    {
+        return new Category()
+        {
+            Name = category.Name,
+            Description = category.Description,
+        };
+    }
 }

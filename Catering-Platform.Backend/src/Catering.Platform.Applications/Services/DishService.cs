@@ -1,6 +1,9 @@
-﻿using Catering.Platform.Domain.Models;
+﻿using Catering.Platform.Applications.Abstractions;
+using Catering.Platform.Applications.Models;
+using Catering.Platform.Domain.Exceptions;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
-using Catering.Platform.Domain.Services;
+using Catering.Platform.Domain.Requests;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -18,11 +21,13 @@ public class DishService : IDishService
         _logger = logger;
     }
     
-    public Task<List<Dish>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<DishViewModel>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            return _repository.GetAllAsync(cancellationToken);
+            var existingDishes = await _repository.GetAllAsync(cancellationToken);
+            var existingDishViewmodels = existingDishes.Select(DishViewModel.MapToViewModel).ToList();
+            return existingDishViewmodels;
         }
         catch (Exception ex)
         {
@@ -32,12 +37,25 @@ public class DishService : IDishService
         }
     }
 
-    public Task<Dish?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<DishViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
-            return _repository.GetByIdAsync(id, cancellationToken);
+            var existingDish = await _repository.GetByIdAsync(id, cancellationToken);
+            if (existingDish == null)
+            {
+                throw new DishNotFoundException();
+            }
+            return DishViewModel.MapToViewModel(existingDish);
         }
+
+        catch (DishNotFoundException ex)
+        {
+            _logger.LogError(
+                "Dish is not found {Id}. See Details: {Details}", id, ex.Message);
+            throw;
+        }
+
         catch (Exception ex)
         {
             _logger.LogError(
@@ -46,11 +64,12 @@ public class DishService : IDishService
         }
     }
 
-    public async Task<Guid> AddAsync(Dish entity, CancellationToken cancellationToken = default)
+    public async Task<Guid> AddAsync(CreateDishRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var result = await _repository.AddAsync(entity, cancellationToken);
+            var dish = CreateDishRequest.MapToDomain(request);
+            var result = await _repository.AddAsync(dish, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;
         }
@@ -58,45 +77,65 @@ public class DishService : IDishService
         {
             _logger.LogError(
                 "Unable to save dish {Name}, {Description}. See Details: {Details}",
-                entity.Name,
-                entity.Description,
+                request.Name,
+                request.Description,
                 ex.Message);
             throw;
         }
     }
 
-    public async Task<Guid> UpdateAsync(Dish entity, CancellationToken cancellationToken = default)
+    public async Task<Guid> UpdateAsync(Guid id, UpdateDishRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var result = _repository.Update(entity);
+            var existingDish = await _repository.GetByIdAsync(id, cancellationToken);
+            if (existingDish == null)
+            {
+                throw new DishNotFoundException();
+            }
+            existingDish = UpdateDishRequest.UpdateFrom(existingDish);
+            var result = _repository.Update(existingDish);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;
         }
+
+        catch (DishNotFoundException ex)
+        {
+            _logger.LogError(
+                "Dish is not found {Id}. See Details: {Details}", id, ex.Message);
+            throw;
+        }
+
         catch (Exception ex)
         {
             _logger.LogError(
                 "Unable to update dish {Name}, {Description}. See Details: {Details}",
-                entity.Name,
-                entity.Description,
+                request.Name,
+                request.Description,
                 ex.Message);
             throw;
         }
     }
 
-    public async Task DeleteAsync(Dish entity, CancellationToken cancellationToken = default)
+    public async Task<Guid> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        var existingDish = await _repository.GetByIdAsync(id,cancellationToken);
+        if (existingDish == null)
+        {
+            throw new DishNotFoundException();
+        }
         try
         {
-            _repository.Delete(entity);
+            _repository.Delete(existingDish);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return existingDish.Id;
         }
         catch (Exception ex)
         {
             _logger.LogError(
                 "Unable to delete dish {Name}, {Description}. See Details: {Details}",
-                entity.Name,
-                entity.Description,
+                existingDish.Name,
+                existingDish.Description,
                 ex.Message);
             throw;
         }

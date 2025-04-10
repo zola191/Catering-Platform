@@ -1,7 +1,6 @@
-﻿using Catering.Platform.API.Models;
-using Catering.Platform.API.Validators;
+﻿using Catering.Platform.API.Validators;
+using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Domain.Requests;
-using Catering.Platform.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Platform.API.Controllers
@@ -30,20 +29,14 @@ namespace Catering.Platform.API.Controllers
         public async Task<ActionResult> Categories(CancellationToken ct = default)
         {
             var result = await _categoryService.GetAllAsync(ct);
-            var categoryViewModels = result.Select(CategoryViewModel.MapFrom);
-            return Ok(categoryViewModels);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult> Category([FromRoute] Guid id, CancellationToken ct = default)
         {
             var result = await _categoryService.GetByIdAsync(id, ct);
-            if (result != null)
-            {
-                var categoryViewModel = CategoryViewModel.MapFrom(result);
-                return Ok(categoryViewModel);
-            }
-            return BadRequest();
+            return Ok(result);
         }
 
         [HttpPost]

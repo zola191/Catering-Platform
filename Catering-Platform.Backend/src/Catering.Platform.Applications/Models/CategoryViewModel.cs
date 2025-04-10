@@ -1,15 +1,14 @@
 ﻿using Catering.Platform.Domain.Models;
 
-namespace Catering.Platform.API.Models;
+namespace Catering.Platform.Applications.Models;
 
-public class CategoryViewModel
+public record CategoryViewModel
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
     public string? Description { get; set; }
 
-
-    public static CategoryViewModel MapFrom(Category category)
+    public static CategoryViewModel MapToViewModel(Category category)
     {
         return new CategoryViewModel()
         {
@@ -18,7 +17,6 @@ public class CategoryViewModel
             Description = category.Description,
         };
     }
-
     //extensions для dto лучше не использовать
     //extensions для legacy
 }

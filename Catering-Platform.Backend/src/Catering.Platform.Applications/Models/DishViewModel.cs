@@ -1,11 +1,11 @@
 ﻿using Catering.Platform.Domain.Models;
 
-namespace Catering.Platform.Domain.Requests;
+namespace Catering.Platform.Applications.Models;
 
-public record UpdateDishRequest
+public record DishViewModel
 {
     public string Name { get; set; }
-    public string? Description { get; set; }
+    public string Description { get; set; }
     public decimal Price { get; set; }
     public Guid CategoryId { get; set; }
     public string? ImageUrl { get; set; }
@@ -14,9 +14,9 @@ public record UpdateDishRequest
     public List<string> Allergens { get; set; }
     public string PortionSize { get; set; }
 
-    public static Dish UpdateFrom(Dish dish)
+    public static DishViewModel MapToViewModel(Dish dish)
     {
-        return new Dish()
+        return new DishViewModel()
         {
             Name = dish.Name,
             Description = dish.Description,
@@ -24,8 +24,8 @@ public record UpdateDishRequest
             CategoryId = dish.CategoryId,
             ImageUrl = dish.ImageUrl,
             IsAvailable = dish.IsAvailable,
-            Ingredients = new IngredientList(dish.Ingredients.Items),
-            Allergens = new AllergenList(dish.Ingredients.Items),
+            Ingredients = dish.Ingredients.Items,
+            Allergens = dish.Allergens.Items,
             PortionSize = dish.PortionSize
         };
     }
