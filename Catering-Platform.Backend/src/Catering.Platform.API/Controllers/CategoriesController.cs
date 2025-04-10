@@ -1,6 +1,8 @@
 ﻿using Catering.Platform.API.Models;
 using Catering.Platform.API.Requests;
+using Catering.Platform.API.Validators;
 using Catering.Platform.Domain.Models;
+using Catering.Platform.Domain.Requests;
 using Catering.Platform.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,21 +13,24 @@ namespace Catering.Platform.API.Controllers
     public class CategoriesController : ControllerBase
     {
         private ICategoryService _categoryService;
+        private CreateCategoryRequestValidator _createCategoryRequestValidator;
 
-        public CategoriesController(ICategoryService categoryService)
+        public CategoriesController(
+            ICategoryService categoryService,
+            CreateCategoryRequestValidator createCategoryRequestValidator)
         {
             _categoryService = categoryService;
+            _createCategoryRequestValidator = createCategoryRequestValidator;
         }
 
         [HttpGet]
         public async Task<ActionResult> Categories(CancellationToken ct = default)
         {
             var result = await _categoryService.GetAllAsync(ct);
-            var categoryViewModels = result.Select(c => new CategoryViewModel()
-            {
-                Name = c.Name,
-                Description = c.Description
-            });
+            // дублирование кода в методах при трасформации, использовать automapper(удобно при сложных моделях с вложениями,
+            // но стал платным, много рефлексии внутри automapper-a, желательно избегать automapper)
+            // 
+            var categoryViewModels = result.Select(CategoryViewModel.MapFrom);
             return Ok(categoryViewModels);
         }
 
@@ -51,20 +56,25 @@ namespace Catering.Platform.API.Controllers
             [FromBody] CreateCategoryRequest request,
             CancellationToken ct = default)
         {
-            var category = new Category()
+            // добавить валидацию на разрешенные значения см. на правила entity слоя Domain
+            var validationResult = await _createCategoryRequestValidator.ValidateAsync(request, ct);
+            if (validationResult.IsValid)
             {
-                Name = request.Name,
-                Description = request.Description
-            };
+                //1. создать отдельный сервис для Mapping
+                //2. передать request в _categoryService, и логику преобразования выполнить в _categoryService что было сделано
+                var result = await _categoryService.AddAsync(request, ct);
+                return Ok(result);
+            }
+            // open problem объекты для межкоммуникационного взаимодействия
+            // 
 
-            var result = await _categoryService.UpdateAsync(category, ct);
-            return Ok(result);
+            return BadRequest(validationResult.Errors);
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<ActionResult<Guid>> Update(        
+        public async Task<ActionResult<Guid>> Update(
             [FromRoute] Guid id,
-            UpdateCategoryRequest request, 
+            UpdateCategoryRequest request,
             CancellationToken ct = default)
         {
             var existingCategory = await _categoryService.GetByIdAsync(id, ct);
@@ -80,7 +90,7 @@ namespace Catering.Platform.API.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        public async Task<ActionResult<Guid>> Delete(        
+        public async Task<ActionResult<Guid>> Delete(
             [FromRoute] Guid id,
             CancellationToken ct = default)
         {

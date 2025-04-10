@@ -1,5 +1,6 @@
 ﻿using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
+using Catering.Platform.Domain.Requests;
 using Catering.Platform.Domain.Services;
 using Microsoft.Extensions.Logging;
 
@@ -17,11 +18,16 @@ internal sealed class CategoryService : ICategoryService
         _logger = logger;
     }
     // CategoryViewModel
-    public async Task<Guid> AddAsync(Category entity, CancellationToken cancellationToken)
+    public async Task<Guid> AddAsync(CreateCategoryRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _repository.AddAsync(entity, cancellationToken);
+            var category = new Category()
+            {
+                Name = request.Name,
+                Description = request.Description
+            };
+            var result = await _repository.AddAsync(category, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;
         }
@@ -29,8 +35,8 @@ internal sealed class CategoryService : ICategoryService
         {
             _logger.LogError(
                 "Unable to save category {Name}, {Description}. See Details: {Details}",
-                entity.Name,
-                entity.Description,
+                request.Name,
+                request.Description,
                 ex.Message);
             throw; // чтобы не терять callstack
         }

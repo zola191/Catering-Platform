@@ -1,6 +1,6 @@
-﻿namespace Catering.Platform.API.Requests;
+﻿namespace Catering.Platform.Domain.Requests;
 
-public record UpdateDishRequest
+public record CreateDishRequest
 {
     public string Name { get; set; }
     public string? Description { get; set; }
