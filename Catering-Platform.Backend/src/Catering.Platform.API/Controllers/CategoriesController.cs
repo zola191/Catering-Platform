@@ -1,7 +1,5 @@
 ﻿using Catering.Platform.API.Models;
-using Catering.Platform.API.Requests;
 using Catering.Platform.API.Validators;
-using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Requests;
 using Catering.Platform.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,22 +12,24 @@ namespace Catering.Platform.API.Controllers
     {
         private ICategoryService _categoryService;
         private CreateCategoryRequestValidator _createCategoryRequestValidator;
+        private UpdateCategoryRequestValidator _updateCategoryRequestValidator;
 
         public CategoriesController(
             ICategoryService categoryService,
-            CreateCategoryRequestValidator createCategoryRequestValidator)
+            CreateCategoryRequestValidator createCategoryRequestValidator,
+            UpdateCategoryRequestValidator updateCategoryRequestValidator)
         {
             _categoryService = categoryService;
             _createCategoryRequestValidator = createCategoryRequestValidator;
+            _updateCategoryRequestValidator = updateCategoryRequestValidator;
         }
 
+        // дублирование кода в методах при трасформации, использовать automapper(удобно при сложных моделях с вложениями,
+        // но стал платным, много рефлексии внутри automapper-a, желательно избегать automapper)
         [HttpGet]
         public async Task<ActionResult> Categories(CancellationToken ct = default)
         {
             var result = await _categoryService.GetAllAsync(ct);
-            // дублирование кода в методах при трасформации, использовать automapper(удобно при сложных моделях с вложениями,
-            // но стал платным, много рефлексии внутри automapper-a, желательно избегать automapper)
-            // 
             var categoryViewModels = result.Select(CategoryViewModel.MapFrom);
             return Ok(categoryViewModels);
         }
@@ -40,14 +40,9 @@ namespace Catering.Platform.API.Controllers
             var result = await _categoryService.GetByIdAsync(id, ct);
             if (result != null)
             {
-                var categoryViewModel = new CategoryViewModel()
-                {
-                    Name = result.Name,
-                    Description = result.Description
-                };
+                var categoryViewModel = CategoryViewModel.MapFrom(result);
                 return Ok(categoryViewModel);
             }
-
             return BadRequest();
         }
 
@@ -74,16 +69,15 @@ namespace Catering.Platform.API.Controllers
         [HttpPut("{id:guid}")]
         public async Task<ActionResult<Guid>> Update(
             [FromRoute] Guid id,
-            UpdateCategoryRequest request,
+            [FromBody] UpdateCategoryRequest request,
             CancellationToken ct = default)
         {
-            var existingCategory = await _categoryService.GetByIdAsync(id, ct);
-            if (existingCategory != null)
+            var validationResult = await _updateCategoryRequestValidator.ValidateAsync(request, ct);
+
+            if (validationResult.IsValid)
             {
-                existingCategory.Name = request.Name;
-                existingCategory.Description = request.Description;
-                await _categoryService.UpdateAsync(existingCategory, ct);
-                return Ok(existingCategory.Id);
+                var result = await _categoryService.UpdateAsync(id, request, ct);
+                return Ok(result);
             }
 
             return BadRequest();
@@ -94,13 +88,8 @@ namespace Catering.Platform.API.Controllers
             [FromRoute] Guid id,
             CancellationToken ct = default)
         {
-            var existingCategory = await _categoryService.GetByIdAsync(id, ct);
-            if (existingCategory != null)
-            {
-                await _categoryService.DeleteAsync(existingCategory, ct);
-                return Ok(existingCategory.Id);
-            }
-            return BadRequest();
+            var result = await _categoryService.DeleteAsync(id, ct);
+            return Ok(result);
         }
     }
 }

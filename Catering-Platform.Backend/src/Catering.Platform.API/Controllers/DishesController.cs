@@ -1,6 +1,6 @@
 ﻿using Catering.Platform.API.Models;
-using Catering.Platform.API.Requests;
 using Catering.Platform.Domain.Models;
+using Catering.Platform.Domain.Requests;
 using Catering.Platform.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 

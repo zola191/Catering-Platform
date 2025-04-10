@@ -8,7 +8,7 @@ namespace Catering.Platform.Domain.Services
         Task<List<Category>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<Category?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Guid> AddAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default);
-        Task<Guid> UpdateAsync(Category entity, CancellationToken cancellationToken = default);
-        Task DeleteAsync(Category entity, CancellationToken cancellationToken = default);
+        Task<Guid> UpdateAsync(Guid id, UpdateCategoryRequest request, CancellationToken cancellationToken = default);
+        Task<Guid> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

@@ -4,9 +4,9 @@ using FluentValidation;
 
 namespace Catering.Platform.API.Validators
 {
-    public class CreateCategoryRequestValidator : AbstractValidator<CreateCategoryRequest>
+    public class UpdateCategoryRequestValidator : AbstractValidator<UpdateCategoryRequest>
     {
-        public CreateCategoryRequestValidator()
+        public UpdateCategoryRequestValidator()
         {
             RuleFor(f => f.Name).NotEmpty().WithMessage("Name is required");
             RuleFor(f => f.Name).MaximumLength(Constants.MAX_LOW_TEXT_LENGTH).WithMessage("Maximum Length exceeded");
