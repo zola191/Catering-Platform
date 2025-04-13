@@ -1,6 +1,11 @@
 ﻿using Catering.Platform.API.Validators;
+using Catering.Platform.API.ViewModels;
 using Catering.Platform.Applications.Abstractions;
+using Catering.Platform.Applications.Features.Categories.Create;
+using Catering.Platform.Applications.Features.Categories.GetAll;
+using Catering.Platform.Applications.Validators;
 using Catering.Platform.Domain.Requests;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Platform.API.Controllers
@@ -10,26 +15,32 @@ namespace Catering.Platform.API.Controllers
     public class CategoriesController : ControllerBase
     {
         private ICategoryService _categoryService;
-        private CreateCategoryRequestValidator _createCategoryRequestValidator;
+        private CreateCategoryCommandValidator _createCategoryRequestValidator;
         private UpdateCategoryRequestValidator _updateCategoryRequestValidator;
+        private IMediator _mediator;
 
         public CategoriesController(
             ICategoryService categoryService,
-            CreateCategoryRequestValidator createCategoryRequestValidator,
-            UpdateCategoryRequestValidator updateCategoryRequestValidator)
+            CreateCategoryCommandValidator createCategoryRequestValidator,
+            UpdateCategoryRequestValidator updateCategoryRequestValidator,
+            IMediator mediator)
         {
             _categoryService = categoryService;
             _createCategoryRequestValidator = createCategoryRequestValidator;
             _updateCategoryRequestValidator = updateCategoryRequestValidator;
+            _mediator = mediator;
         }
 
         // дублирование кода в методах при трасформации, использовать automapper(удобно при сложных моделях с вложениями,
         // но стал платным, много рефлексии внутри automapper-a, желательно избегать automapper)
         [HttpGet]
-        public async Task<ActionResult> Categories(CancellationToken ct = default)
+        public async Task<ActionResult> Categories([FromQuery] GetAllQuery query)
         {
-            var result = await _categoryService.GetAllAsync(ct);
-            return Ok(result);
+            // если swagger не сможет, то создать пустой GetAllQuery для передачи в _mediator
+
+            var result = await _mediator.Send(query);
+            var categoryViewModels = result.Select(CategoryViewModel.MapToViewModel);
+            return Ok(categoryViewModels);
         }
 
         [HttpGet("{id}")]
@@ -40,36 +51,38 @@ namespace Catering.Platform.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Guid>> Create(
-            [FromBody] CreateCategoryRequest request,
-            CancellationToken ct = default)
+        public async Task<IActionResult> Create(
+            [FromBody] CreateCategoryCommand command)
         {
-            // добавить валидацию на разрешенные значения см. на правила entity слоя Domain
-            var validationResult = await _createCategoryRequestValidator.ValidateAsync(request, ct);
-            if (validationResult.IsValid)
+            try
             {
-                //1. создать отдельный сервис для Mapping
-                //2. передать request в _categoryService, и логику преобразования выполнить в _categoryService что было сделано
-                var result = await _categoryService.AddAsync(request, ct);
+                var result = await _mediator.Send(command);
                 return Ok(result);
             }
-            // open problem объекты для межкоммуникационного взаимодействия
-            // 
 
-            return BadRequest(validationResult.Errors);
+            catch (FluentValidation.ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
+            catch (Exception ex)
+            {
+                //вернуть 500 internal server error
+                return BadRequest();
+            }
         }
 
         [HttpPut("{id:guid}")]
         public async Task<ActionResult<Guid>> Update(
             [FromRoute] Guid id,
-            [FromBody] UpdateCategoryRequest request,
+            [FromBody] UpdateCategoryCommand command,
             CancellationToken ct = default)
         {
-            var validationResult = await _updateCategoryRequestValidator.ValidateAsync(request, ct);
+            var validationResult = await _updateCategoryRequestValidator.ValidateAsync(command, ct);
 
             if (validationResult.IsValid)
             {
-                var result = await _categoryService.UpdateAsync(id, request, ct);
+                var result = await _categoryService.UpdateAsync(id, command, ct);
                 return Ok(result);
             }
 

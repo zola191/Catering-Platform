@@ -1,10 +1,10 @@
-﻿using Catering.Platform.Domain.Requests;
-using Catering.Platform.Domain.Shared;
+﻿using Catering.Platform.Applications.Validators;
+using Catering.Platform.Domain.Requests;
 using FluentValidation;
 
 namespace Catering.Platform.API.Validators
 {
-    public class UpdateCategoryRequestValidator : AbstractValidator<UpdateCategoryRequest>
+    public class UpdateCategoryRequestValidator : AbstractValidator<UpdateCategoryCommand>
     {
         public UpdateCategoryRequestValidator()
         {

@@ -2,7 +2,7 @@
 
 namespace Catering.Platform.Domain.Requests;
 
-public record UpdateCategoryRequest
+public record UpdateCategoryCommand
 {
     public string Name { get; set; }
     public string? Description { get; set; }

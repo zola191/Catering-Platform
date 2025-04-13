@@ -7,7 +7,7 @@ public interface ICategoryService
 {
     Task<List<CategoryViewModel>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<CategoryViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<Guid> AddAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default);
-    Task<Guid> UpdateAsync(Guid id, UpdateCategoryRequest request, CancellationToken cancellationToken = default);
+    Task<Guid> AddAsync(CreateCategoryCommand request, CancellationToken cancellationToken = default);
+    Task<Guid> UpdateAsync(Guid id, UpdateCategoryCommand request, CancellationToken cancellationToken = default);
     Task<Guid> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

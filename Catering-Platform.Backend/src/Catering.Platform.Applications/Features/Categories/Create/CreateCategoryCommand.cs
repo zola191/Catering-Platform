@@ -1,13 +1,14 @@
 ﻿using Catering.Platform.Domain.Models;
+using MediatR;
 
-namespace Catering.Platform.Domain.Requests;
+namespace Catering.Platform.Applications.Features.Categories.Create;
 
-public record CreateCategoryRequest
+public class CreateCategoryCommand : IRequest<Guid>
 {
     public string Name { get; set; }
     public string? Description { get; set; }
 
-    public static Category MapToDomain(CreateCategoryRequest category)
+    public static Category MapToDomain(CreateCategoryCommand category)
     {
         return new Category()
         {

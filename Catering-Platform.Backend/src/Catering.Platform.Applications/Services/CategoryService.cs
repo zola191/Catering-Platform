@@ -72,29 +72,29 @@ internal sealed class CategoryService : ICategoryService
     // с placeholder logger работает более оптимально
 
     // CategoryViewModel
-    public async Task<Guid> AddAsync(CreateCategoryRequest request, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var category = CreateCategoryRequest.MapToDomain(request);
-            var result = await _repository.AddAsync(category, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "Unable to save category {Name}, {Description}. See Details: {Details}",
-                request.Name,
-                request.Description,
-                ex.Message);
-            throw; // чтобы не терять callstack
-        }
-    }
+    //public async Task<Guid> AddAsync(CreateCategoryCommand request, CancellationToken cancellationToken)
+    //{
+    //    try
+    //    {
+    //        var category = CreateCategoryCommand.MapToDomain(request);
+    //        var result = await _repository.AddAsync(category, cancellationToken);
+    //        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    //        return result;
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(
+    //            "Unable to save category {Name}, {Description}. See Details: {Details}",
+    //            request.Name,
+    //            request.Description,
+    //            ex.Message);
+    //        throw; // чтобы не терять callstack
+    //    }
+    //}
 
     public async Task<Guid> UpdateAsync(
         Guid id,
-        UpdateCategoryRequest request,
+        UpdateCategoryCommand request,
         CancellationToken cancellationToken)
     {
         try
@@ -102,7 +102,7 @@ internal sealed class CategoryService : ICategoryService
             var existingCategory = await _repository.GetByIdAsync(id, cancellationToken);
             if (existingCategory != null)
             {
-                existingCategory = UpdateCategoryRequest.UpdateFrom(existingCategory);
+                existingCategory = UpdateCategoryCommand.UpdateFrom(existingCategory);
                 var result = _repository.Update(existingCategory);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 return result;
@@ -168,5 +168,10 @@ internal sealed class CategoryService : ICategoryService
             throw; // чтобы не терять callstack
         }
 
+    }
+
+    public Task<Guid> AddAsync(CreateCategoryCommand request, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 }
