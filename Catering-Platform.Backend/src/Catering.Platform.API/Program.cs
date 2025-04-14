@@ -1,3 +1,4 @@
+using Catering.Platform.API.Extensions;
 using Catering.Platform.Applications.Extensions;
 using Catering.Platform.Persistence;
 using Catering.Platform.Persistence.Extensions;
@@ -12,6 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddWeb();
 builder.Services.AddApplication();
 builder.Services.AddPersistence(builder.Configuration);
 

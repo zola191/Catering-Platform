@@ -17,7 +17,4 @@ public record CategoryViewModel
             Description = category.Description,
         };
     }
-    //extensions для dto лучше не использовать
-    //extensions для legacy
-    //паттерн Builder (синтаксический сахар) реализуется через extensions 
 }

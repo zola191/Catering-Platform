@@ -1,7 +1,7 @@
 ﻿using Catering.Platform.Applications.Features.Categories.Create;
 using FluentValidation;
 
-namespace Catering.Platform.Applications.Validators;
+namespace Catering.Platform.API.Validators;
 
 public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCommand>
 {

@@ -1,5 +1,5 @@
 ﻿using Catering.Platform.Applications.Abstractions;
-using Catering.Platform.Applications.Models;
+using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
@@ -93,7 +93,8 @@ public class DishService : IDishService
             {
                 throw new DishNotFoundException();
             }
-            existingDish = UpdateDishRequest.UpdateFrom(existingDish);
+            UpdateDishRequest.UpdateEntity(existingDish,request);
+            
             var result = _repository.Update(existingDish);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;

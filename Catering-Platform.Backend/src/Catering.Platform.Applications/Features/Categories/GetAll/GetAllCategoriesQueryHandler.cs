@@ -4,16 +4,16 @@ using MediatR;
 
 namespace Catering.Platform.Applications.Features.Categories.GetAll;
 
-public class GetAllQueryHandler : IRequestHandler<GetAllQuery, IEnumerable<Category>>
+public class GetAllCategoriesQueryHandler : IRequestHandler<GetAllCategoriesQuery, IEnumerable<Category>>
 {
     private readonly ICategoryRepository _categoryRepository;
 
-    public GetAllQueryHandler(ICategoryRepository categoryRepository)
+    public GetAllCategoriesQueryHandler(ICategoryRepository categoryRepository)
     {
         _categoryRepository = categoryRepository;
     }
 
-    public async Task<IEnumerable<Category>> Handle(GetAllQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<Category>> Handle(GetAllCategoriesQuery query, CancellationToken cancellationToken)
     {
         return await _categoryRepository.GetAllAsync(cancellationToken);
     }

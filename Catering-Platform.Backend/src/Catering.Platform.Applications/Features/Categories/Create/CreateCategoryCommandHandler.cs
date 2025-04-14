@@ -1,4 +1,5 @@
-﻿using Catering.Platform.Domain.Repositories;
+﻿using Catering.Platform.Domain.Exceptions;
+using Catering.Platform.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -24,6 +25,12 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
     {
         try
         {
+            var existingCategory = await _repository.GetByNameAsync(request.Name, cancellationToken);
+            if (existingCategory != null)
+            {
+                throw new CategoryAlreadyExistException();
+            }
+            
             var category = CreateCategoryCommand.MapToDomain(request);
             var result = await _repository.AddAsync(category, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -36,7 +43,7 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
                 request.Name,
                 request.Description,
                 ex.Message);
-            throw; // чтобы не терять callstack
+            throw;
         }
     }
 }

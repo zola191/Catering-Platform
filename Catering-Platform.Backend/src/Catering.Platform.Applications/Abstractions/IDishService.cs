@@ -1,4 +1,4 @@
-﻿using Catering.Platform.Applications.Models;
+﻿using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Requests;
 
 namespace Catering.Platform.Applications.Abstractions;

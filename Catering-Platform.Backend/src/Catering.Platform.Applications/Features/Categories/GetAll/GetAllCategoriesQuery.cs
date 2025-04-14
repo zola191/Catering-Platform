@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Catering.Platform.Applications.Features.Categories.GetAll;
 
-public class GetAllQuery : IRequest<IEnumerable<Category>>
+public record GetAllCategoriesQuery : IRequest<IEnumerable<Category>>
 {
 
 }

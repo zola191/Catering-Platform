@@ -1,7 +1,7 @@
 ﻿using Catering.Platform.Domain.Shared;
 using FluentValidation;
 
-namespace Catering.Platform.Applications.Validators;
+namespace Catering.Platform.API.Validators;
 
 public static class CategoryValidationRules
 {

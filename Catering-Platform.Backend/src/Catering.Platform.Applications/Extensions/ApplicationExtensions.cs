@@ -13,7 +13,6 @@ public static class ApplicationExtensions
     public static void AddApplication(
         this IServiceCollection services)
     {
-        services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IDishService, DishService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));

@@ -1,5 +1,6 @@
 ﻿using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Catering.Platform.Persistence.Repositories;
 
@@ -9,5 +10,9 @@ internal sealed class CategoryRepository : Repository<Category>, ICategoryReposi
     {
         
     }
-    
+
+    public Task<Category?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return DbContext.Categories.FirstOrDefaultAsync(f => f.Name == name, cancellationToken);
+    }
 }
