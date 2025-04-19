@@ -2,7 +2,7 @@
 
 namespace Catering.Platform.Persistence.Repositories
 {
-    internal sealed class UnitOfWork(ApplicationDbContext dbContext) : IUnidOfWork
+    internal sealed class UnitOfWork(ApplicationDbContext dbContext) : IUnitOfWork
     {
         public int SaveChanges()
         {

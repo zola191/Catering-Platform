@@ -2,7 +2,7 @@
 
 namespace Catering.Platform.Domain.Repositories;
 
-public interface ICategoryRepository : IRepository<Category>
+public interface IDishRepository : IRepository<Dish>
 {
     
 }

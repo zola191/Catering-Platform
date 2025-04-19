@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Catering.Platform.API.Validators;
+using Catering.Platform.Applications.Abstractions;
+using Catering.Platform.Domain.Requests;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Platform.API.Controllers
 {
@@ -6,36 +9,80 @@ namespace Catering.Platform.API.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        // GET: api/<CategoriesController>
+        private ICategoryService _categoryService;
+        private CreateCategoryRequestValidator _createCategoryRequestValidator;
+        private UpdateCategoryRequestValidator _updateCategoryRequestValidator;
+
+        public CategoriesController(
+            ICategoryService categoryService,
+            CreateCategoryRequestValidator createCategoryRequestValidator,
+            UpdateCategoryRequestValidator updateCategoryRequestValidator)
+        {
+            _categoryService = categoryService;
+            _createCategoryRequestValidator = createCategoryRequestValidator;
+            _updateCategoryRequestValidator = updateCategoryRequestValidator;
+        }
+
+        // дублирование кода в методах при трасформации, использовать automapper(удобно при сложных моделях с вложениями,
+        // но стал платным, много рефлексии внутри automapper-a, желательно избегать automapper)
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<ActionResult> Categories(CancellationToken ct = default)
         {
-            return new string[] { "value1", "value2" };
+            var result = await _categoryService.GetAllAsync(ct);
+            return Ok(result);
         }
 
-        // GET api/<CategoriesController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<ActionResult> Category([FromRoute] Guid id, CancellationToken ct = default)
         {
-            return "value";
+            var result = await _categoryService.GetByIdAsync(id, ct);
+            return Ok(result);
         }
 
-        // POST api/<CategoriesController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<ActionResult<Guid>> Create(
+            [FromBody] CreateCategoryRequest request,
+            CancellationToken ct = default)
         {
+            // добавить валидацию на разрешенные значения см. на правила entity слоя Domain
+            var validationResult = await _createCategoryRequestValidator.ValidateAsync(request, ct);
+            if (validationResult.IsValid)
+            {
+                //1. создать отдельный сервис для Mapping
+                //2. передать request в _categoryService, и логику преобразования выполнить в _categoryService что было сделано
+                var result = await _categoryService.AddAsync(request, ct);
+                return Ok(result);
+            }
+            // open problem объекты для межкоммуникационного взаимодействия
+            // 
+
+            return BadRequest(validationResult.Errors);
         }
 
-        // PUT api/<CategoriesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPut("{id:guid}")]
+        public async Task<ActionResult<Guid>> Update(
+            [FromRoute] Guid id,
+            [FromBody] UpdateCategoryRequest request,
+            CancellationToken ct = default)
         {
+            var validationResult = await _updateCategoryRequestValidator.ValidateAsync(request, ct);
+
+            if (validationResult.IsValid)
+            {
+                var result = await _categoryService.UpdateAsync(id, request, ct);
+                return Ok(result);
+            }
+
+            return BadRequest();
         }
 
-        // DELETE api/<CategoriesController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpDelete("{id:guid}")]
+        public async Task<ActionResult<Guid>> Delete(
+            [FromRoute] Guid id,
+            CancellationToken ct = default)
         {
+            var result = await _categoryService.DeleteAsync(id, ct);
+            return Ok(result);
         }
     }
 }

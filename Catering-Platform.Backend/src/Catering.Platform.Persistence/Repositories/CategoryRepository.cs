@@ -7,5 +7,7 @@ internal sealed class CategoryRepository : Repository<Category>, ICategoryReposi
 {
     public CategoryRepository(ApplicationDbContext dbContext) : base(dbContext)
     {
+        
     }
+    
 }

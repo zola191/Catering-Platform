@@ -1,6 +1,9 @@
-﻿using Catering.Platform.Domain.Models;
+﻿using Catering.Platform.Applications.Abstractions;
+using Catering.Platform.Applications.Models;
+using Catering.Platform.Domain.Exceptions;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
-using Catering.Platform.Domain.Services;
+using Catering.Platform.Domain.Requests;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -8,58 +11,53 @@ namespace Catering.Platform.Applications.Services;
 internal sealed class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _repository;
-    private readonly IUnidOfWork _unidOfWork;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CategoryService> _logger;
-    public CategoryService(ICategoryRepository repository, IUnidOfWork unidOfWork, ILogger<CategoryService> logger)
+    public CategoryService(ICategoryRepository repository, IUnitOfWork unitOfWork, ILogger<CategoryService> logger)
     {
         _repository = repository;
-        _unidOfWork = unidOfWork;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
-    //CategoryViewModel
-    public async Task<Guid> AddAsync(Category entity, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var result = await _repository.AddAsync(entity, cancellationToken);
-            await _unidOfWork.SaveChangesAsync(cancellationToken);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                "Unable to save category {Name}, {Description}. See Details: {Details}",
-                entity.Name,
-                entity.Description,
-                ex.Message);
-            throw; // чтобы не терять callstack
-        }
-    }
 
-    public async Task DeleteAsync(Category entity, CancellationToken cancellationToken)
+    public async Task<CategoryViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            _repository.Delete(entity);
-            await _unidOfWork.SaveChangesAsync(cancellationToken);
+            var category = await _repository.GetByIdAsync(id, cancellationToken);
+            if (category == null)
+            {
+                throw new CategoryNotFoundException();
+            }
+            var categoryViewModel = CategoryViewModel.MapToViewModel(category);
+            return categoryViewModel;
         }
-        catch (Exception ex)
+
+        catch (CategoryNotFoundException ex)
         {
             _logger.LogError(
-            "Unable to delete category {Name}, {Description}. See Details: {Details}",
-            entity.Name,
-            entity.Description,
+            "Category does not exist {Id}: {Details}",
+            id,
             ex.Message);
-            throw; // чтобы не терять callstack
+            throw;
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError(
+            "Unable to fetch category by id {Id}. See Details: {Details}", id, ex.Message);
+            throw;
         }
     }
 
-    public Task<List<Category>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<List<CategoryViewModel>> GetAllAsync(CancellationToken cancellationToken)
     {
         try
         {
             //пока не нужен await, после добавления ViewModel потребуется материализация
-            return _repository.GetAllAsync(cancellationToken);
+            var categories = await _repository.GetAllAsync(cancellationToken);
+            var categoryViewModels = categories.Select(CategoryViewModel.MapToViewModel).ToList();
+            return categoryViewModels;
         }
         catch (Exception ex)
         {
@@ -69,38 +67,106 @@ internal sealed class CategoryService : ICategoryService
         }
     }
 
-    //минусы интерполяции, логгер для каждого вхождения будет создавать отдельную подстроку что съедает память для форматирования, актуально когда logdebagger
-    //с placeholder logger работает более оптимально
+    // минусы интерполяции, логгер для каждого вхождения будет создавать
+    // отдельную подстроку что съедает память для форматирования, актуально когда logdebagger
+    // с placeholder logger работает более оптимально
 
-    public Task<Category?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    // CategoryViewModel
+    public async Task<Guid> AddAsync(CreateCategoryRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            return _repository.GetByIdAsync(id, cancellationToken);
+            var category = CreateCategoryRequest.MapToDomain(request);
+            var result = await _repository.AddAsync(category, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogError(
-            "Unable to fetch category by id {Id}. See Details: {Details}", id, ex.Message);
-            throw;
+                "Unable to save category {Name}, {Description}. See Details: {Details}",
+                request.Name,
+                request.Description,
+                ex.Message);
+            throw; // чтобы не терять callstack
         }
     }
 
-    public async Task<Guid> UpdateAsync(Category entity, CancellationToken cancellationToken)
+    public async Task<Guid> UpdateAsync(
+        Guid id,
+        UpdateCategoryRequest request,
+        CancellationToken cancellationToken)
     {
         try
         {
-            var result = _repository.Update(entity);
-            await _unidOfWork.SaveChangesAsync(cancellationToken);
-            return result;
+            var existingCategory = await _repository.GetByIdAsync(id, cancellationToken);
+            if (existingCategory != null)
+            {
+                existingCategory = UpdateCategoryRequest.UpdateFrom(existingCategory);
+                var result = _repository.Update(existingCategory);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                return result;
+            }
+            throw new CategoryNotFoundException();
         }
+
+        catch (CategoryNotFoundException ex)
+        {
+            _logger.LogError(
+            "Category does not exist {Name}, {Description}. See Details: {Details}",
+            request.Name,
+            request.Description,
+            ex.Message);
+            throw;
+        }
+
         catch (Exception ex)
         {
             // добавить полный слепок как в AddAsync, с указанием старого состояния и нового состояния,
             // актуально для финтех/медицинские где цена ошибки высока
             _logger.LogError(
-            "Unable to update category by id {Id}. See Details: {Details}", entity.Id, ex.Message);
+                "Unable to update category {Name}, {Description}. See Details: {Details}",
+                request.Name,
+                request.Description,
+                ex.Message);
             throw;
         }
+
+    }
+
+    public async Task<Guid> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var existingCategory = await _repository.GetByIdAsync(id, cancellationToken);
+        if (existingCategory == null)
+        {
+            throw new CategoryNotFoundException();
+        }
+        try
+        {
+            _repository.Delete(existingCategory);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return existingCategory.Id;
+        }
+
+        catch (CategoryNotFoundException ex)
+        {
+            _logger.LogError(
+            "Category does not exist {Name}, {Description}. See Details: {Details}",
+            existingCategory.Name,
+            existingCategory.Description,
+            ex.Message);
+            throw;
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError(
+            "Unable to delete category {Name}, {Description}. See Details: {Details}",
+            existingCategory.Name,
+            existingCategory.Description,
+            ex.Message);
+            throw; // чтобы не терять callstack
+        }
+
     }
 }
