@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Features.Categories.GetById;
 
-public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery, Category>
+public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery, Category?>
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly ILogger<GetCategoryByIdQueryHandler> _logger;
@@ -17,10 +17,15 @@ public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery,
         _logger = logger;
     }
 
-    public async Task<Category> Handle(GetCategoryByIdQuery query, CancellationToken cancellationToken)
+    public async Task<Category?> Handle(GetCategoryByIdQuery query, CancellationToken cancellationToken)
     {
         try
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
             var category = await _categoryRepository.GetByIdAsync(query.Id, cancellationToken);
             if (category == null)
             {

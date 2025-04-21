@@ -19,7 +19,7 @@ public class CategoriesController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IMapper<Category, CategoryViewModel> _mapper;
     public CategoriesController(
-        IMediator mediator, 
+        IMediator mediator,
         IMapper<Category, CategoryViewModel> mapper)
     {
         _mediator = mediator;
@@ -36,10 +36,14 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult> Category([FromRoute] Guid id, CancellationToken ct = default)
+    public async Task<ActionResult> Category([FromRoute] Guid id, CancellationToken ct)
     {
         var command = new GetCategoryByIdQuery() { Id = id };
-        var result = await _mediator.Send(command, ct);
+        var result = await _mediator.Send(command, ct); // взамен CancellationToken httpCancel, добавить Middleware для обработки данной ошибки (операция прервана пользователем)
+        if (result == null)
+        {
+            return NotFound(); // проверить код при CancellationToken.IsCancellationRequested
+        }
         var categoryViewModel = _mapper.MapToModel(result);
         return Ok(categoryViewModel);
     }
