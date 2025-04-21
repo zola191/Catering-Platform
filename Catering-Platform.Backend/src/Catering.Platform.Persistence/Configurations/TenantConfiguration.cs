@@ -12,6 +12,7 @@ namespace Catering.Platform.Persistence.Configurations
             builder.ToTable("tenant");
 
             builder.HasKey(f => f.Id);
+            builder.HasIndex(f=>f.Name);
 
             builder.Property(f => f.Name).IsRequired().HasMaxLength(Constants.MAX_TEXT_LENGTH_200);
         }
