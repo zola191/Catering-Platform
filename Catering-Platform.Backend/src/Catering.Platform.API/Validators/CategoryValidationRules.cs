@@ -10,13 +10,13 @@ public static class CategoryValidationRules
     {
         return rule
             .NotEmpty().WithMessage("Name is required")
-            .MaximumLength(Constants.MAX_LOW_TEXT_LENGTH).WithMessage("Maximum Length exceeded");
+            .MaximumLength(Constants.MAX_TEXT_LENGTH_200_256).WithMessage("Maximum Length exceeded");
     }
 
     public static IRuleBuilderOptions<T, string> ApplyDescriptionRules<T>(
         this IRuleBuilder<T, string> rule)
     {
         return rule
-            .MaximumLength(Constants.MAX_HIGH_TEXT_LENGTH).WithMessage("Maximum Length exceeded");
+            .MaximumLength(Constants.MAX_TEXT_LENGTH_200_2000).WithMessage("Maximum Length exceeded");
     }
 }
