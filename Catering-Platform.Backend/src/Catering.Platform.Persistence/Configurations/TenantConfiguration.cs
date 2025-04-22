@@ -9,10 +9,10 @@ namespace Catering.Platform.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Tenant> builder)
         {
-            builder.ToTable("tenant");
+            builder.ToTable("Tenant");
 
             builder.HasKey(f => f.Id);
-            builder.HasIndex(f=>f.Name);
+            builder.HasIndex(f => f.Name);
 
             builder.Property(f => f.Name).IsRequired().HasMaxLength(Constants.MAX_TEXT_LENGTH_200);
         }
