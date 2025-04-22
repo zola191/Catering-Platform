@@ -1,6 +1,6 @@
 ﻿using Catering.Platform.API.Contracts;
 using Catering.Platform.API.Mapping;
-using Catering.Platform.API.ViewModels;
+using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Models;
 
 namespace Catering.Platform.API.Extensions;

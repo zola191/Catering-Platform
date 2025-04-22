@@ -1,10 +1,10 @@
 ﻿using Catering.Platform.API.Contracts;
-using Catering.Platform.API.ViewModels;
 using Catering.Platform.Applications.Features.Categories.Create;
 using Catering.Platform.Applications.Features.Categories.Delete;
 using Catering.Platform.Applications.Features.Categories.GetAll;
 using Catering.Platform.Applications.Features.Categories.GetById;
 using Catering.Platform.Applications.Features.Categories.Update;
+using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Requests;
 using MediatR;

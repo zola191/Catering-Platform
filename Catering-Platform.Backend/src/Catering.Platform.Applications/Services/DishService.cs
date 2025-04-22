@@ -21,11 +21,11 @@ public class DishService : IDishService
         _logger = logger;
     }
     
-    public async Task<List<DishViewModel>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<DishViewModel>> GetAllAsync()
     {
         try
         {
-            var existingDishes = await _repository.GetAllAsync(cancellationToken);
+            var existingDishes = await _repository.GetAllAsync();
             var existingDishViewmodels = existingDishes.Select(DishViewModel.MapToViewModel).ToList();
             return existingDishViewmodels;
         }

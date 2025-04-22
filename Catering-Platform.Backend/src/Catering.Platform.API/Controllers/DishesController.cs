@@ -16,9 +16,9 @@ public class DishesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult> Dishes(CancellationToken ct = default)
+    public async Task<ActionResult> Dishes()
     {
-        var result = await _dishService.GetAllAsync(ct);
+        var result = await _dishService.GetAllAsync();
         return Ok(result);
     }
 
