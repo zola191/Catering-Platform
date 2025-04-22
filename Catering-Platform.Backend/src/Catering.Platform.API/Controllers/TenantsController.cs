@@ -17,8 +17,8 @@ namespace Catering.Platform.API.Controllers
         [HttpGet]
         public async Task<ActionResult> Tenants()
         {
-            var result = await _tenantService.GetAllAsync();
-            return Ok(result);
+            var viewModels = await _tenantService.GetAllAsync();
+            return Ok(viewModels);
         }
     }
 }

@@ -14,6 +14,7 @@ public static class ApplicationExtensions
         this IServiceCollection services)
     {
         services.AddScoped<IDishService, DishService>();
+        services.AddScoped<ITenantService, TenantService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());

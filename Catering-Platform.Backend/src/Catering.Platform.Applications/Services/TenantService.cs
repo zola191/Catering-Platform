@@ -8,16 +8,16 @@ namespace Catering.Platform.Applications.Services
     public class TenantService : ITenantService
     {
         private readonly ITenantRepository _repository;
-        private readonly ILogger<IDishService> _logger;
+        private readonly ILogger<ITenantService> _logger;
 
-        public TenantService(ITenantRepository repository, ILogger<IDishService> logger)
+        public TenantService(ITenantRepository repository, ILogger<ITenantService> logger)
         {
             _repository = repository;
             _logger = logger;
         }
 
 
-        public async Task<List<TenantViewModel>> GetAllAsync()
+        public async Task<IEnumerable<TenantViewModel>> GetAllAsync()
         {
             try
             {

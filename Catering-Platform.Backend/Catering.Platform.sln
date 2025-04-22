@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catering.Platform.UnitTests", "Catering.Platform.UnitTests\Catering.Platform.UnitTests.csproj", "{8360F260-0371-487D-9615-808FD862C00C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{27EC9156-533D-450A-A152-1975780986D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27EC9156-533D-450A-A152-1975780986D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27EC9156-533D-450A-A152-1975780986D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8360F260-0371-487D-9615-808FD862C00C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8360F260-0371-487D-9615-808FD862C00C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8360F260-0371-487D-9615-808FD862C00C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8360F260-0371-487D-9615-808FD862C00C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +60,7 @@ Global
 		{A438BCFB-79B2-4512-8420-BA3A362AFC05} = {FA4BEB5B-1250-4F39-B363-F31B956CC75F}
 		{27EC9156-533D-450A-A152-1975780986D7} = {FA4BEB5B-1250-4F39-B363-F31B956CC75F}
 		{45302949-3781-4858-B779-4FC1374C449A} = {5ADFB68B-4F46-4525-A40A-E851C17AFF29}
+		{8360F260-0371-487D-9615-808FD862C00C} = {FA4BEB5B-1250-4F39-B363-F31B956CC75F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4D08A849-ECC0-49AD-B784-A9D3772BC0BC}
