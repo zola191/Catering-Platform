@@ -14,19 +14,16 @@ public record UpdateDishRequest
     public List<string> Allergens { get; set; }
     public string PortionSize { get; set; }
 
-    public static Dish UpdateFrom(Dish dish)
+    public static void UpdateEntity(Dish entity, UpdateDishRequest request)
     {
-        return new Dish()
-        {
-            Name = dish.Name,
-            Description = dish.Description,
-            Price = dish.Price,
-            CategoryId = dish.CategoryId,
-            ImageUrl = dish.ImageUrl,
-            IsAvailable = dish.IsAvailable,
-            Ingredients = new IngredientList(dish.Ingredients.Items),
-            Allergens = new AllergenList(dish.Ingredients.Items),
-            PortionSize = dish.PortionSize
-        };
+        entity.Name = request.Name;
+        entity.Description = request.Description;
+        entity.Price = request.Price;
+        entity.CategoryId = request.CategoryId;
+        entity.ImageUrl = request.ImageUrl;
+        entity.IsAvailable = request.IsAvailable;
+        entity.Ingredients = new IngredientList(request.Ingredients);
+        entity.Allergens = new AllergenList(request.Allergens);
+        entity.PortionSize = request.PortionSize;
     }
 }

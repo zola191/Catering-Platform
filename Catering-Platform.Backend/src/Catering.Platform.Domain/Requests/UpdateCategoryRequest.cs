@@ -4,15 +4,6 @@ namespace Catering.Platform.Domain.Requests;
 
 public record UpdateCategoryRequest
 {
-    public string Name { get; set; }
-    public string? Description { get; set; }
-
-    public static Category UpdateFrom(Category category)
-    {
-        return new Category()
-        {
-            Name = category.Name,
-            Description = category.Description,
-        };
-    }
+    public string Name { get; init; }
+    public string? Description { get; init; }
 }

@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Catering.Platform.Domain\Catering.Platform.Domain.csproj" />
     <ProjectReference Include="..\Catering.Platform.Persistence\Catering.Platform.Persistence.csproj" />
   </ItemGroup>

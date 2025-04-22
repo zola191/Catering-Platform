@@ -1,4 +1,4 @@
-using Catering.Platform.API.Validators;
+using Catering.Platform.API.Extensions;
 using Catering.Platform.Applications.Extensions;
 using Catering.Platform.Persistence;
 using Catering.Platform.Persistence.Extensions;
@@ -12,8 +12,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<CreateCategoryRequestValidator>();
 
+builder.Services.AddWeb();
 builder.Services.AddApplication();
 builder.Services.AddPersistence(builder.Configuration);
 

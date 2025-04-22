@@ -1,6 +1,6 @@
 ﻿using Catering.Platform.Domain.Models;
 
-namespace Catering.Platform.Applications.Models;
+namespace Catering.Platform.API.ViewModels;
 
 public record CategoryViewModel
 {
@@ -17,6 +17,4 @@ public record CategoryViewModel
             Description = category.Description,
         };
     }
-    //extensions для dto лучше не использовать
-    //extensions для legacy
 }

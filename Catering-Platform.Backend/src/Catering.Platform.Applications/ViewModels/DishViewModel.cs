@@ -1,6 +1,6 @@
 ﻿using Catering.Platform.Domain.Models;
 
-namespace Catering.Platform.Applications.Models;
+namespace Catering.Platform.Applications.ViewModels;
 
 public record DishViewModel
 {

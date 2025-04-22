@@ -1,88 +1,118 @@
-﻿using Catering.Platform.API.Validators;
-using Catering.Platform.Applications.Abstractions;
+﻿using Catering.Platform.API.Contracts;
+using Catering.Platform.API.ViewModels;
+using Catering.Platform.Applications.Features.Categories.Create;
+using Catering.Platform.Applications.Features.Categories.Delete;
+using Catering.Platform.Applications.Features.Categories.GetAll;
+using Catering.Platform.Applications.Features.Categories.GetById;
+using Catering.Platform.Applications.Features.Categories.Update;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Requests;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Catering.Platform.API.Controllers
+namespace Catering.Platform.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class CategoriesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CategoriesController : ControllerBase
+    private readonly IMediator _mediator;
+    private readonly IMapper<Category, CategoryViewModel> _mapper;
+    public CategoriesController(
+        IMediator mediator,
+        IMapper<Category, CategoryViewModel> mapper)
     {
-        private ICategoryService _categoryService;
-        private CreateCategoryRequestValidator _createCategoryRequestValidator;
-        private UpdateCategoryRequestValidator _updateCategoryRequestValidator;
+        _mediator = mediator;
+        _mapper = mapper;
+    }
 
-        public CategoriesController(
-            ICategoryService categoryService,
-            CreateCategoryRequestValidator createCategoryRequestValidator,
-            UpdateCategoryRequestValidator updateCategoryRequestValidator)
+    [HttpGet]
+    public async Task<ActionResult> Categories([FromQuery] GetAllCategoriesQuery categoriesQuery)
+    {
+        // если swagger не сможет, то создать пустой GetAllQuery для передачи в _mediator
+        var result = await _mediator.Send(categoriesQuery);
+        var categoryViewModels = result.Select(CategoryViewModel.MapToViewModel);
+        return Ok(categoryViewModels);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult> Category([FromRoute] Guid id, CancellationToken ct)
+    {
+        var command = new GetCategoryByIdQuery() { Id = id };
+        var result = await _mediator.Send(command, ct); // взамен CancellationToken httpCancel, добавить Middleware для обработки данной ошибки (операция прервана пользователем)
+        if (result == null)
         {
-            _categoryService = categoryService;
-            _createCategoryRequestValidator = createCategoryRequestValidator;
-            _updateCategoryRequestValidator = updateCategoryRequestValidator;
+            return NotFound(); // проверить код при CancellationToken.IsCancellationRequested
         }
+        var categoryViewModel = _mapper.MapToModel(result);
+        return Ok(categoryViewModel);
+    }
 
-        // дублирование кода в методах при трасформации, использовать automapper(удобно при сложных моделях с вложениями,
-        // но стал платным, много рефлексии внутри automapper-a, желательно избегать automapper)
-        [HttpGet]
-        public async Task<ActionResult> Categories(CancellationToken ct = default)
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateCategoryCommand command)
+    {
+        try
         {
-            var result = await _categoryService.GetAllAsync(ct);
+            var result = await _mediator.Send(command);
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult> Category([FromRoute] Guid id, CancellationToken ct = default)
+        catch (FluentValidation.ValidationException ex)
         {
-            var result = await _categoryService.GetByIdAsync(id, ct);
+            return BadRequest(ex.Message);
+        }
+
+        catch (Exception ex)
+        {
+            //вернуть 500 internal server error
+            return Problem(
+                title: "Internal Server Error",
+                detail: "An unexpected error occurred. Please try again later.",
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<Guid>> Update(
+        [FromRoute] Guid id,
+        [FromBody] UpdateCategoryRequest request,
+        CancellationToken ct = default)
+    {
+        var command = new UpdateCategoryCommand()
+        {
+            Id = id,
+            Name = request.Name,
+            Description = request.Name
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command, ct);
             return Ok(result);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Guid>> Create(
-            [FromBody] CreateCategoryRequest request,
-            CancellationToken ct = default)
+        catch (FluentValidation.ValidationException ex)
         {
-            // добавить валидацию на разрешенные значения см. на правила entity слоя Domain
-            var validationResult = await _createCategoryRequestValidator.ValidateAsync(request, ct);
-            if (validationResult.IsValid)
-            {
-                //1. создать отдельный сервис для Mapping
-                //2. передать request в _categoryService, и логику преобразования выполнить в _categoryService что было сделано
-                var result = await _categoryService.AddAsync(request, ct);
-                return Ok(result);
-            }
-            // open problem объекты для межкоммуникационного взаимодействия
-            // 
-
-            return BadRequest(validationResult.Errors);
+            return BadRequest(ex.Message);
         }
 
-        [HttpPut("{id:guid}")]
-        public async Task<ActionResult<Guid>> Update(
-            [FromRoute] Guid id,
-            [FromBody] UpdateCategoryRequest request,
-            CancellationToken ct = default)
+        catch (Exception ex)
         {
-            var validationResult = await _updateCategoryRequestValidator.ValidateAsync(request, ct);
-
-            if (validationResult.IsValid)
-            {
-                var result = await _categoryService.UpdateAsync(id, request, ct);
-                return Ok(result);
-            }
-
-            return BadRequest();
+            return Problem(
+                title: "Internal Server Error",
+                detail: "An unexpected error occurred. Please try again later.",
+                statusCode: StatusCodes.Status500InternalServerError);
         }
+    }
 
-        [HttpDelete("{id:guid}")]
-        public async Task<ActionResult<Guid>> Delete(
-            [FromRoute] Guid id,
-            CancellationToken ct = default)
-        {
-            var result = await _categoryService.DeleteAsync(id, ct);
-            return Ok(result);
-        }
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult<Guid>> Delete(
+        [FromRoute] Guid id,
+        CancellationToken ct = default)
+    {
+        var command = new DeleteCategoryCommand() { Id = id };
+        var result = await _mediator.Send(command, ct);
+        return Ok(result);
     }
 }
