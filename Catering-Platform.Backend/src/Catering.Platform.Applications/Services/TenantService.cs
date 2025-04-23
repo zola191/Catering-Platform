@@ -16,7 +16,6 @@ namespace Catering.Platform.Applications.Services
             _logger = logger;
         }
 
-
         public async Task<IEnumerable<TenantViewModel>> GetAllAsync()
         {
             try
@@ -29,6 +28,26 @@ namespace Catering.Platform.Applications.Services
             {
                 _logger.LogError(
                     "Unable to fetch all Tenants. See Details: {Details}", ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<TenantViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var existingTenant = await _repository.GetByIdAsync(id, cancellationToken);
+                if (existingTenant == null)
+                {
+                    return null;
+                }
+                return TenantViewModel.MapToViewModel(existingTenant);
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    "Unable to fetch tenant by id {Id}. See Details: {Details}", id, ex.Message);
                 throw;
             }
         }

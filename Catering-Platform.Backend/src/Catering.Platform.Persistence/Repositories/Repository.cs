@@ -24,10 +24,10 @@ where T : Entity, new()
         DbContext.Set<T>().Remove(entity);
     }
 
-    public Task<List<T>> GetAllAsync(CancellationToken cancellationToken)
+    public Task<List<T>> GetAllAsync()
     {
         //отложенность переносим на более высокий уровень, решение для оптимизации расходования памяти
-        return DbContext.Set<T>().ToListAsync(cancellationToken);
+        return DbContext.Set<T>().ToListAsync();
     }
 
     public Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

@@ -4,17 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Catering.Platform.Persistence.Repositories
 {
-    public class TenantRepository : ITenantRepository
+    internal class TenantRepository : Repository<Tenant>, ITenantRepository
     {
-        private readonly ApplicationDbContext _dbContext;
-        public TenantRepository(ApplicationDbContext dbContext)
+        public TenantRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
-            _dbContext = dbContext;
-        }
 
-        public async Task<IEnumerable<Tenant>> GetAllAsync()
-        {
-            return await _dbContext.Set<Tenant>().ToListAsync();
         }
     }
 }

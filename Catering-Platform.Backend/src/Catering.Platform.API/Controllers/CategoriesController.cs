@@ -36,7 +36,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult> Category([FromRoute] Guid id, CancellationToken ct)
+    public async Task<ActionResult> GetById([FromRoute] Guid id, CancellationToken ct)
     {
         var command = new GetCategoryByIdQuery() { Id = id };
         var result = await _mediator.Send(command, ct); // взамен CancellationToken httpCancel, добавить Middleware для обработки данной ошибки (операция прервана пользователем)
