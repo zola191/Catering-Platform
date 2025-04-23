@@ -43,7 +43,7 @@ public class DishService : IDishService
             var existingDish = await _repository.GetByIdAsync(id, cancellationToken);
             if (existingDish == null)
             {
-                throw new DishNotFoundException();
+                return null;
             }
             return DishViewModel.MapToViewModel(existingDish);
         }

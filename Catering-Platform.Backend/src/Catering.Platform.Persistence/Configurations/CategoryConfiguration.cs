@@ -13,7 +13,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         
         builder.HasKey(f => f.Id);
         
-        builder.Property(f => f.Name).IsRequired().HasMaxLength(Constants.MAX_TEXT_LENGTH_200_256);
+        builder.Property(f => f.Name).IsRequired().HasMaxLength(Constants.MAX_TEXT_LENGTH_256);
         
         builder.Property(f => f.Description).IsRequired(false).HasMaxLength(-1); // разворачивается nvarchar(max) в бд.
                                                                                  // (посмотреть по varchar и nvarchar)

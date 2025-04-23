@@ -4,24 +4,29 @@ using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Services;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
+using Catering.Platform.Domain.Requests;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace Catering.Platform.UnitTests
 {
-    public class TenantServiceTest
+    public class TenantServiceTests
     {
         private readonly ITenantRepository _mockRepository;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantService _mockTenantService;
+        private readonly IUnitOfWork _mockUnitOfWork;
+        private readonly ILogger<ITenantService> _mockLogger;
         private readonly Fixture _fixture;
 
-        public TenantServiceTest()
+        public TenantServiceTests()
         {
             _fixture = new Fixture();
+            //Настройка AutoFixture для работы с NSubstitute.
             _fixture.Customize(new AutoNSubstituteCustomization());
-
+            _mockLogger = Substitute.For<ILogger<TenantService>>();
             _mockRepository = Substitute.For<ITenantRepository>();
-            _tenantService = new TenantService(_mockRepository, Substitute.For<ILogger<ITenantService>>());
+            _mockUnitOfWork = Substitute.For<IUnitOfWork>();
+            _mockTenantService = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
         }
 
         [Fact]
@@ -32,7 +37,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetAllAsync().Returns(Task.FromResult(tenants));
 
             // Act
-            var result = await _tenantService.GetAllAsync();
+            var result = await _mockTenantService.GetAllAsync();
 
             // Assert
             Assert.NotNull(result);
@@ -55,7 +60,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetAllAsync().Returns(Task.FromResult<List<Tenant>>(new List<Tenant>()));
 
             // Act
-            var result = await _tenantService.GetAllAsync();
+            var result = await _mockTenantService.GetAllAsync();
 
             // Assert
             Assert.NotNull(result);
@@ -71,7 +76,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetByIdAsync(tenantId, CancellationToken.None).Returns(Task.FromResult(tenant));
 
             // Act
-            var result = await _tenantService.GetByIdAsync(tenantId, CancellationToken.None);
+            var result = await _mockTenantService.GetByIdAsync(tenantId, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -90,10 +95,36 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetByIdAsync(tenantId, CancellationToken.None).Returns(Task.FromResult<Tenant>(null));
 
             // Act
-            var result = await _tenantService.GetByIdAsync(tenantId, CancellationToken.None);
+            var result = await _mockTenantService.GetByIdAsync(tenantId, CancellationToken.None);
 
             // Assert
             Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task AddAsync_ReturnsGuid_WhenTenantIsAddedSuccessfully()
+        {
+            // Arrange
+            var request = _fixture.Create<CreateTenantRequest>();
+            var tenant = CreateTenantRequest.MapToDomain(request);
+            var expectedResult = Guid.NewGuid();
+
+            _mockRepository.AddAsync(Arg.Any<Tenant>(), CancellationToken.None)
+                .Returns(Task.FromResult(expectedResult));
+
+            _mockUnitOfWork.SaveChangesAsync(CancellationToken.None)
+                .Returns(Task.FromResult(1));
+
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+
+            // Act
+            var result = await service.AddAsync(request, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(expectedResult, result);
+
+            await _mockRepository.Received(1).AddAsync(Arg.Any<Tenant>(), Arg.Any<CancellationToken>());
+            await _mockUnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
     }
 }

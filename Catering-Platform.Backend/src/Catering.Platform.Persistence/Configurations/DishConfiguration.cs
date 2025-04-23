@@ -15,11 +15,11 @@ public class DishConfiguration: IEntityTypeConfiguration<Dish>
         
         builder.Property(f => f.Name)
             .IsRequired()
-            .HasMaxLength(Constants.MAX_TEXT_LENGTH_200_256);
+            .HasMaxLength(Constants.MAX_TEXT_LENGTH_256);
         
         builder.Property(f => f.Description)
             .IsRequired()
-            .HasMaxLength(Constants.MAX_TEXT_LENGTH_200_2000);
+            .HasMaxLength(Constants.MAX_TEXT_LENGTH_2000);
         
         builder.Property(f => f.Price).IsRequired();
         
