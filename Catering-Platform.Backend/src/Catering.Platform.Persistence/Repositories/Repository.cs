@@ -13,9 +13,9 @@ where T : Entity, new()
         DbContext = dbContext;
     }
 
-    public async Task<Guid> AddAsync(T entity, CancellationToken cancellationToken)
+    public async Task<Guid> AddAsync(T entity)
     {
-        var result = await DbContext.Set<T>().AddAsync(entity, cancellationToken);
+        var result = await DbContext.Set<T>().AddAsync(entity);
         return result.Entity.Id;
     }
 
@@ -30,9 +30,9 @@ where T : Entity, new()
         return DbContext.Set<T>().ToListAsync();
     }
 
-    public Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public Task<T?> GetByIdAsync(Guid id)
     {
-        return DbContext.Set<T>().FirstOrDefaultAsync(x => x.Id.Equals(id), cancellationToken);
+        return DbContext.Set<T>().FirstOrDefaultAsync(x => x.Id.Equals(id));
     }
 
     public Guid Update(T entity)

@@ -26,7 +26,7 @@ public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery,
                 return null;
             }
 
-            var category = await _categoryRepository.GetByIdAsync(query.Id, cancellationToken);
+            var category = await _categoryRepository.GetByIdAsync(query.Id);
             if (category == null)
             {
                 return null;

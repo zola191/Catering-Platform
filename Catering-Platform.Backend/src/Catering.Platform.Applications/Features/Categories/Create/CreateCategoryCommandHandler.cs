@@ -25,14 +25,14 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
     {
         try
         {
-            var existingCategory = await _repository.GetByNameAsync(request.Name, cancellationToken);
+            var existingCategory = await _repository.GetByNameAsync(request.Name);
             if (existingCategory != null)
             {
                 throw new CategoryAlreadyExistException();
             }
             
             var category = CreateCategoryCommand.MapToDomain(request);
-            var result = await _repository.AddAsync(category, cancellationToken);
+            var result = await _repository.AddAsync(category);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return result;
         }

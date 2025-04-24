@@ -2,11 +2,13 @@
 using AutoFixture.AutoNSubstitute;
 using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Services;
+using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Catering.Platform.UnitTests
 {
@@ -73,10 +75,10 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var tenant = _fixture.Create<Tenant>();
             var tenantId = tenant.Id;
-            _mockRepository.GetByIdAsync(tenantId, CancellationToken.None).Returns(Task.FromResult(tenant));
+            _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult(tenant));
 
             // Act
-            var result = await _mockTenantService.GetByIdAsync(tenantId, CancellationToken.None);
+            var result = await _mockTenantService.GetByIdAsync(tenantId);
 
             // Assert
             Assert.NotNull(result);
@@ -92,10 +94,10 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var tenantId = Guid.NewGuid();
-            _mockRepository.GetByIdAsync(tenantId, CancellationToken.None).Returns(Task.FromResult<Tenant>(null));
+            _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult<Tenant>(null));
 
             // Act
-            var result = await _mockTenantService.GetByIdAsync(tenantId, CancellationToken.None);
+            var result = await _mockTenantService.GetByIdAsync(tenantId);
 
             // Assert
             Assert.Null(result);
@@ -109,22 +111,98 @@ namespace Catering.Platform.UnitTests
             var tenant = CreateTenantRequest.MapToDomain(request);
             var expectedResult = Guid.NewGuid();
 
-            _mockRepository.AddAsync(Arg.Any<Tenant>(), CancellationToken.None)
+            _mockRepository.AddAsync(Arg.Any<Tenant>())
                 .Returns(Task.FromResult(expectedResult));
 
-            _mockUnitOfWork.SaveChangesAsync(CancellationToken.None)
+            _mockUnitOfWork.SaveChangesAsync()
                 .Returns(Task.FromResult(1));
 
             var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
 
             // Act
-            var result = await service.AddAsync(request, CancellationToken.None);
+            var result = await service.AddAsync(request);
 
             // Assert
             Assert.Equal(expectedResult, result);
 
-            await _mockRepository.Received(1).AddAsync(Arg.Any<Tenant>(), Arg.Any<CancellationToken>());
+            await _mockRepository.Received(1).AddAsync(Arg.Any<Tenant>());
+            await _mockUnitOfWork.Received(1).SaveChangesAsync();
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ReturnsGuid_WhenTenantIsUpdatedSuccessfully()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var request = _fixture.Create<UpdateTenantRequest>();
+            var existingTenant = _fixture.Build<Tenant>()
+                .With(t => t.Id, id)
+                .Create();
+
+            _mockRepository.GetByIdAsync(id)
+                .Returns(Task.FromResult(existingTenant));
+
+            _mockRepository.Update(existingTenant)
+                .Returns(existingTenant.Id);
+
+            _mockUnitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(1));
+
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+
+            // Act
+            var result = await service.UpdateAsync(id, request);
+
+            // Assert
+            Assert.Equal(existingTenant.Id, result);
+
+            await _mockRepository.Received(1).GetByIdAsync(id);
+            _mockRepository.Received(1).Update(Arg.Is<Tenant>(t => t.Id == id));
             await _mockUnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ThrowsTenantNotFoundException_WhenTenantDoesNotExist()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var request = _fixture.Create<UpdateTenantRequest>();
+
+            _mockRepository.GetByIdAsync(id)
+                .Returns(Task.FromResult<Tenant>(null));
+
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<TenantNotFoundException>(
+                () => service.UpdateAsync(id, request));
+
+            Assert.Contains("does not exist", exception.Message);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ThrowsException_WhenRepositoryFails()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var request = _fixture.Create<UpdateTenantRequest>();
+            var existingTenant = _fixture.Build<Tenant>()
+                .With(t => t.Id, id)
+                .Create();
+
+            _mockRepository.GetByIdAsync(id)
+                .Returns(Task.FromResult(existingTenant));
+
+            _mockRepository.Update(existingTenant)
+                .Throws(new InvalidOperationException("Database error"));
+
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.UpdateAsync(id, request));
+
+            Assert.Contains("Database error", exception.Message);
         }
     }
 }

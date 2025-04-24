@@ -1,6 +1,4 @@
-﻿using Catering.Platform.Domain.Models;
-
-namespace Catering.Platform.Domain.Requests;
+﻿namespace Catering.Platform.Domain.Requests.Category;
 
 public record UpdateCategoryRequest
 {

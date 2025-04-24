@@ -1,6 +1,6 @@
 ﻿using Catering.Platform.Domain.Models;
 
-namespace Catering.Platform.Domain.Requests;
+namespace Catering.Platform.Domain.Requests.Dish;
 
 public record CreateDishRequest
 {
@@ -14,9 +14,9 @@ public record CreateDishRequest
     public List<string> Allergens { get; set; }
     public string PortionSize { get; set; }
 
-    public static Dish MapToDomain(CreateDishRequest request)
+    public static Models.Dish MapToDomain(CreateDishRequest request)
     {
-        return new Dish()
+        return new Models.Dish()
         {
             Name = request.Name,
             Description = request.Description,

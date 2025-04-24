@@ -6,7 +6,7 @@ using Catering.Platform.Applications.Features.Categories.GetById;
 using Catering.Platform.Applications.Features.Categories.Update;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Models;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Category;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

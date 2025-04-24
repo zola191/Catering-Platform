@@ -1,7 +1,8 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
+using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Repositories;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services
@@ -19,13 +20,13 @@ namespace Catering.Platform.Applications.Services
             _logger = logger;
         }
 
-        public async Task<Guid> AddAsync(CreateTenantRequest request, CancellationToken cancellationToken = default)
+        public async Task<Guid> AddAsync(CreateTenantRequest request)
         {
             try
             {
                 var tenant = CreateTenantRequest.MapToDomain(request);
-                var result = await _repository.AddAsync(tenant, cancellationToken);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                var result = await _repository.AddAsync(tenant);
+                await _unitOfWork.SaveChangesAsync();
                 return result;
             }
             catch (Exception ex)
@@ -54,11 +55,11 @@ namespace Catering.Platform.Applications.Services
             }
         }
 
-        public async Task<TenantViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<TenantViewModel?> GetByIdAsync(Guid id)
         {
             try
             {
-                var existingTenant = await _repository.GetByIdAsync(id, cancellationToken);
+                var existingTenant = await _repository.GetByIdAsync(id);
                 if (existingTenant == null)
                 {
                     return null;
@@ -70,6 +71,39 @@ namespace Catering.Platform.Applications.Services
             {
                 _logger.LogError(
                     "Unable to fetch tenant by id {Id}. See Details: {Details}", id, ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<Guid> UpdateAsync(Guid id, UpdateTenantRequest request)
+        {
+            try
+            {
+                var existingTenant = await _repository.GetByIdAsync(id);
+                if (existingTenant == null)
+                {
+                    throw new TenantNotFoundException();
+                }
+                UpdateTenantRequest.MapToDomain(existingTenant, request);
+
+                var result = _repository.Update(existingTenant);
+                await _unitOfWork.SaveChangesAsync();
+                return result;
+            }
+
+            catch (TenantNotFoundException ex)
+            {
+                _logger.LogError(
+                    "Tenant is not found {Id}. See Details: {Details}", id, ex.Message);
+                throw;
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    "Unable to update tenant {Name}. See Details: {Details}",
+                    request.Name,
+                    ex.Message);
                 throw;
             }
         }

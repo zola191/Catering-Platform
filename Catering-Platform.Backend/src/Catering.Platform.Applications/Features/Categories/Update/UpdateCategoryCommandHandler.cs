@@ -27,7 +27,7 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
     {
         try
         {
-            var existingCategory = await _repository.GetByIdAsync(request.Id, cancellationToken);
+            var existingCategory = await _repository.GetByIdAsync(request.Id);
             if (existingCategory == null)
             {
                 throw new CategoryNotFoundException();

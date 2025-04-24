@@ -1,4 +1,4 @@
-﻿using Catering.Platform.Domain.Requests;
+﻿using Catering.Platform.Domain.Requests.Category;
 using FluentValidation;
 
 namespace Catering.Platform.API.Validators.Categories;

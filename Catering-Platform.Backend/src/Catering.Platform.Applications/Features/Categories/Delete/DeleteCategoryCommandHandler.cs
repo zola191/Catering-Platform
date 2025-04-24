@@ -21,7 +21,7 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
 
     public async Task<Guid> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
     {
-        var existingCategory = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var existingCategory = await _repository.GetByIdAsync(request.Id);
         if (existingCategory == null)
         {
             throw new CategoryNotFoundException();
