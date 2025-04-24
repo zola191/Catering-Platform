@@ -8,6 +8,6 @@ namespace Catering.Platform.Applications.Abstractions
         Task<IEnumerable<TenantViewModel>> GetAllAsync();
         Task<TenantViewModel?> GetByIdAsync(Guid id);
         Task<Guid> AddAsync(CreateTenantRequest request);
-        Task<TenantViewModel> UpdateTenantAsync(UpdateTenantRequest request);
+        Task<Guid> UpdateAsync(Guid id, UpdateTenantRequest request);
     }
 }

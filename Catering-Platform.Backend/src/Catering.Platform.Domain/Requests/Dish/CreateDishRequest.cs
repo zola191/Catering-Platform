@@ -1,4 +1,6 @@
-﻿namespace Catering.Platform.Domain.Requests.Dish;
+﻿using Catering.Platform.Domain.Models;
+
+namespace Catering.Platform.Domain.Requests.Dish;
 
 public record CreateDishRequest
 {

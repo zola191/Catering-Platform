@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace Catering.Platform.API.Validators.Tenants
 {
-    public class CreateTenantRequestValidatior : AbstractValidator<CreateTenantRequest>
+    public class UpdateTenantRequestValidatior : AbstractValidator<UpdateTenantRequest>
     {
-        public CreateTenantRequestValidatior()
+        public UpdateTenantRequestValidatior()
         {
             RuleFor(f => f.Name).ApplyNameRules();
         }

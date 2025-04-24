@@ -1,8 +1,9 @@
 ﻿using Catering.Platform.Applications.Abstractions;
-using Catering.Platform.Domain.Requests.Category;
+using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Requests.Tenant;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace Catering.Platform.API.Controllers
 {
@@ -12,15 +13,18 @@ namespace Catering.Platform.API.Controllers
     {
         private readonly ITenantService _tenantService;
         private readonly IValidator<CreateTenantRequest> _createTenantRequestValidator;
+        private readonly IValidator<UpdateTenantRequest> _updateTenantRequestValidator;
         private readonly ILogger<TenantsController> _logger;
 
         public TenantsController(
             ITenantService tenantService,
             IValidator<CreateTenantRequest> createTenantRequest,
+            IValidator<UpdateTenantRequest> updateTenantRequestValidator,
             ILogger<TenantsController> logger)
         {
             _tenantService = tenantService;
             _createTenantRequestValidator = createTenantRequest;
+            _updateTenantRequestValidator = updateTenantRequestValidator;
             _logger = logger;
         }
 
@@ -58,13 +62,40 @@ namespace Catering.Platform.API.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{id:guid}")]
-        public async Task<ActionResult<Guid>> Update(
-        [FromRoute] Guid id,
-        [FromBody] UpdateTenantRequest request)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update([FromRoute]Guid id, [FromBody] UpdateTenantRequest request)
         {
-            
-            return Ok();
+            var validationResult = await _updateTenantRequestValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
+
+            try
+            {
+                var result = await _tenantService.UpdateAsync(id, request);
+                return Ok(result);
+            }
+            catch (TenantNotFoundException ex)
+            {
+                _logger.LogError(ex, "Tenant not found: {TenantId}", id);
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Tenant not found",
+                    Detail = ex.Message,
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating tenant {TenantId}", id);
+                return StatusCode(500, new ProblemDetails
+                {
+                    Title = "Internal server error",
+                    Detail = "An unexpected error occurred",
+                    Status = StatusCodes.Status500InternalServerError
+                });
+            }
         }
     }
 }

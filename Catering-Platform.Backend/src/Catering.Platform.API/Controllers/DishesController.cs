@@ -24,29 +24,26 @@ public class DishesController : ControllerBase
 
     [HttpPost]
     public async Task<ActionResult<Guid>> Create(
-        [FromBody] CreateDishRequest request,
-        CancellationToken ct = default)
+        [FromBody] CreateDishRequest request)
     {
-        var result = await _dishService.AddAsync(request, ct);
+        var result = await _dishService.AddAsync(request);
         return Ok(result);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<Guid>> Update(
         [FromRoute] Guid id,
-        [FromBody] UpdateDishRequest request,
-        CancellationToken ct = default)
+        [FromBody] UpdateDishRequest request)
     {
-        var result = await _dishService.UpdateAsync(id, request, ct);
+        var result = await _dishService.UpdateAsync(id, request);
         return Ok(result);
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<Guid>> Delete(
-        [FromRoute] Guid id,
-        CancellationToken ct = default)
+        [FromRoute] Guid id)
     {
-        var result = await _dishService.DeleteAsync(id, ct);
+        var result = await _dishService.DeleteAsync(id);
         return Ok(result);
     }
 }

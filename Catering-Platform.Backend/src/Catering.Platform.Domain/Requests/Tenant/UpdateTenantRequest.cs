@@ -3,13 +3,9 @@
 public class UpdateTenantRequest
 {
     public string Name { get; set; }
-    public static Models.Tenant MapToDomain(CreateTenantRequest request)
+    public static void MapToDomain(Models.Tenant entity, UpdateTenantRequest request)
     {
-        return new Models.Tenant()
-        {
-            Name = request.Name,
-            IsActive = true,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        entity.Name = request.Name;
+        entity.UpdatedAt = DateTime.UtcNow;
     }
 }

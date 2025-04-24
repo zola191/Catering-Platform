@@ -14,7 +14,7 @@ public record UpdateDishRequest
     public List<string> Allergens { get; set; }
     public string PortionSize { get; set; }
 
-    public static void UpdateEntity(Models.Dish entity, UpdateDishRequest request)
+    public static void MapToDomain(Models.Dish entity, UpdateDishRequest request)
     {
         entity.Name = request.Name;
         entity.Description = request.Description;

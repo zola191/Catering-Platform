@@ -8,12 +8,17 @@ using NSubstitute;
 using FluentValidation.Results;
 using FluentValidation;
 using Catering.Platform.Domain.Requests.Tenant;
+using Catering.Platform.Domain.Exceptions;
+using Xunit.Sdk;
+using NSubstitute.ExceptionExtensions;
+using Microsoft.AspNetCore.Http;
 
 namespace Catering.Platform.UnitTests
 {
     public class TenantsControllerTests
     {
         private readonly IValidator<CreateTenantRequest> _mockCreateTenantRequestValidatior;
+        private readonly IValidator<UpdateTenantRequest> _mockUpdateTenantRequestValidatior;
         private readonly ITenantService _mockTenantService;
         private readonly ILogger<TenantsController> _mockLogger;
         private readonly TenantsController _controller;
@@ -22,9 +27,16 @@ namespace Catering.Platform.UnitTests
         public TenantsControllerTests()
         {
             _mockCreateTenantRequestValidatior = Substitute.For<IValidator<CreateTenantRequest>>();
+            _mockUpdateTenantRequestValidatior = Substitute.For<IValidator<UpdateTenantRequest>>();
             _mockTenantService = Substitute.For<ITenantService>();
             _mockLogger = Substitute.For<ILogger<TenantsController>>();
-            _controller = new TenantsController(_mockTenantService, _mockCreateTenantRequestValidatior, _mockLogger);
+
+            _controller = new TenantsController(
+                _mockTenantService,
+                _mockCreateTenantRequestValidatior,
+                _mockUpdateTenantRequestValidatior,
+                _mockLogger);
+
             _fixture = new Fixture();
         }
 
@@ -156,6 +168,83 @@ namespace Catering.Platform.UnitTests
 
             var errorMessages = errors.Select(e => e.ErrorMessage);
             Assert.Contains("Name is required", errorMessages);
+        }
+
+        [Fact]
+        public async Task Update_ReturnsOkResult_WithCorrectData()
+        {
+            // Arrange
+            var requestId = Guid.NewGuid();
+            var request = _fixture.Create<UpdateTenantRequest>();
+            var validationResult = new ValidationResult();
+
+            _mockUpdateTenantRequestValidatior.ValidateAsync(request)
+                .Returns(Task.FromResult(validationResult));
+
+            _mockTenantService.UpdateAsync(requestId, request)
+                .Returns(Task.FromResult(requestId));
+
+            // Act
+            var result = await _controller.Update(requestId, request);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedGuid = Assert.IsType<Guid>(okResult.Value);
+            Assert.Equal(requestId, returnedGuid);
+        }
+
+        [Fact]
+        public async Task Update_ReturnsBadRequest_WhenValidationFails()
+        {
+            // Arrange
+            var requestId = Guid.NewGuid();
+            var request = _fixture.Build<UpdateTenantRequest>()
+                .With(f => f.Name, string.Empty)
+                .Create();
+            var validationResult = new ValidationResult(new List<ValidationFailure>
+            {
+                new ValidationFailure("Name", "Name is required")
+            });
+
+            _mockUpdateTenantRequestValidatior.ValidateAsync(request)
+                .Returns(Task.FromResult(validationResult));
+
+            // Act
+            var result = await _controller.Update(requestId, request);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var errors = Assert.IsAssignableFrom<IEnumerable<ValidationFailure>>(badRequestResult.Value);
+
+            var errorMessages = errors.Select(e => e.ErrorMessage);
+            Assert.Contains("Name is required", errorMessages);
+        }
+
+        [Fact]
+        public async Task Update_ReturnsNotFound_WhenTenantDoesNotExist()
+        {
+            // Arrange
+            var requestId = Guid.NewGuid();
+            var request = _fixture.Create<UpdateTenantRequest>();
+            var validationResult = new ValidationResult();
+
+            _mockUpdateTenantRequestValidatior.ValidateAsync(request)
+                .Returns(Task.FromResult(validationResult));
+
+            _mockTenantService
+                .UpdateAsync(requestId, request)
+                .ThrowsAsync(new TenantNotFoundException());
+
+            // Act
+            var result = await _controller.Update(requestId, request);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.NotNull(notFoundResult.Value);
+
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("Tenant not found", problemDetails.Title);
+            Assert.Equal(StatusCodes.Status404NotFound, problemDetails.Status);
         }
     }
 }

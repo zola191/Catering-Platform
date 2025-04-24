@@ -36,11 +36,11 @@ public class DishService : IDishService
         }
     }
 
-    public async Task<DishViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<DishViewModel?> GetByIdAsync(Guid id)
     {
         try
         {
-            var existingDish = await _repository.GetByIdAsync(id, cancellationToken);
+            var existingDish = await _repository.GetByIdAsync(id);
             if (existingDish == null)
             {
                 return null;
@@ -63,13 +63,13 @@ public class DishService : IDishService
         }
     }
 
-    public async Task<Guid> AddAsync(CreateDishRequest request, CancellationToken cancellationToken = default)
+    public async Task<Guid> AddAsync(CreateDishRequest request)
     {
         try
         {
             var dish = CreateDishRequest.MapToDomain(request);
-            var result = await _repository.AddAsync(dish, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var result = await _repository.AddAsync(dish);
+            await _unitOfWork.SaveChangesAsync();
             return result;
         }
         catch (Exception ex)
@@ -83,19 +83,19 @@ public class DishService : IDishService
         }
     }
 
-    public async Task<Guid> UpdateAsync(Guid id, UpdateDishRequest request, CancellationToken cancellationToken = default)
+    public async Task<Guid> UpdateAsync(Guid id, UpdateDishRequest request)
     {
         try
         {
-            var existingDish = await _repository.GetByIdAsync(id, cancellationToken);
+            var existingDish = await _repository.GetByIdAsync(id);
             if (existingDish == null)
             {
                 throw new DishNotFoundException();
             }
-            UpdateDishRequest.UpdateEntity(existingDish,request);
+            UpdateDishRequest.MapToDomain(existingDish,request);
             
             var result = _repository.Update(existingDish);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync();
             return result;
         }
 
@@ -117,9 +117,9 @@ public class DishService : IDishService
         }
     }
 
-    public async Task<Guid> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Guid> DeleteAsync(Guid id)
     {
-        var existingDish = await _repository.GetByIdAsync(id,cancellationToken);
+        var existingDish = await _repository.GetByIdAsync(id);
         if (existingDish == null)
         {
             throw new DishNotFoundException();
@@ -127,7 +127,7 @@ public class DishService : IDishService
         try
         {
             _repository.Delete(existingDish);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync();
             return existingDish.Id;
         }
         catch (Exception ex)
