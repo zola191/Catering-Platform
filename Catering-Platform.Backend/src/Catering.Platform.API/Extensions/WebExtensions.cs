@@ -1,5 +1,6 @@
 ﻿using Catering.Platform.API.Contracts;
 using Catering.Platform.API.Mapping;
+using Catering.Platform.API.Middlewares;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Models;
 using FluentValidation;
@@ -14,5 +15,6 @@ public static class WebExtensions
     {
         services.AddScoped<IMapper<Category, CategoryViewModel>, CategoryMapper>();
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddTransient<ExceptionHandlerMiddleware>();
     }
 }
