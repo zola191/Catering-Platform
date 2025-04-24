@@ -21,6 +21,11 @@ namespace Catering.Platform.API.Middlewares
                         context.Response.StatusCode = 404;
                         await context.Response.WriteAsync(tenantNotFoundException.Message);
                         break;
+                    case TenantAlreadyBlockException tenantAlreadyBlockException:
+                        _logger.LogError("Tenant already blocked.");
+                        context.Response.StatusCode = 400;
+                        await context.Response.WriteAsync(tenantAlreadyBlockException.Message);
+                        break;
                     default:
                         context.Response.StatusCode = 500;
                         _logger.LogError("Something went wrong");

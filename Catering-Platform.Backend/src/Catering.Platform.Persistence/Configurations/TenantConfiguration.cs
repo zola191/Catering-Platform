@@ -15,6 +15,7 @@ namespace Catering.Platform.Persistence.Configurations
             builder.HasIndex(f => f.Name);
 
             builder.Property(f => f.Name).IsRequired().HasMaxLength(Constants.MAX_TEXT_LENGTH_200);
+            builder.Property(f => f.BlockReason).IsRequired(false).HasMaxLength(Constants.MAX_TEXT_LENGTH_500);
         }
     }
 }
