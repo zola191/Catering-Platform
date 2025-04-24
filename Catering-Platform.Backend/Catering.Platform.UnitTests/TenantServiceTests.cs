@@ -294,5 +294,61 @@ namespace Catering.Platform.UnitTests
             await Assert.ThrowsAsync<Exception>(
                 () => _tenantService.BlockTenantAsync(tenantId, request));
         }
+
+        [Fact]
+        public async Task UnblockTenantAsync_ValidRequest_ReturnsViewModel()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var tenant = _fixture.Build<Tenant>()
+                .With(t => t.Id, tenantId)
+                .With(t => t.IsActive, false)
+                .Create();
+
+            _mockRepository.UnBlockAsync(tenantId)
+                .Returns(Task.FromResult(tenant))
+                .AndDoes(x =>
+                {
+                    tenant.IsActive = true;
+                    tenant.BlockReason = string.Empty;
+                    tenant.UpdatedAt = DateTime.UtcNow;
+                });
+
+            // Act
+            var result = await _tenantService.UnblockTenantAsync(tenantId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(tenantId, result.Id);
+            Assert.True(result.IsActive);
+        }
+
+        [Fact]
+        public async Task UnblockTenantAsync_NonExistentTenant_ThrowsNotFoundException()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+
+            _mockRepository.UnBlockAsync(tenantId)
+                .Throws(new TenantNotFoundException());
+
+            // Act & Assert
+            await Assert.ThrowsAsync<TenantNotFoundException>(
+                () => _tenantService.UnblockTenantAsync(tenantId));
+        }
+
+        [Fact]
+        public async Task UnblockTenantAsync_RepositoryError_ThrowsException()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+
+            _mockRepository.UnBlockAsync(tenantId)
+                .Throws(new Exception("Database error"));
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(
+                () => _tenantService.UnblockTenantAsync(tenantId));
+        }
     }
 }

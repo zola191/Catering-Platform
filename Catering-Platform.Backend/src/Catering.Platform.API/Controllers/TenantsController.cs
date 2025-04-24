@@ -122,5 +122,12 @@ namespace Catering.Platform.API.Controllers
             var result = await _tenantService.BlockTenantAsync(id, request);
             return Ok(result);
         }
+
+        [HttpPut("{id:guid}/unblock")]
+        public async Task<ActionResult> UnBlock([FromRoute] Guid id)
+        {
+            var result = await _tenantService.UnblockTenantAsync(id);
+            return Ok(result);
+        }
     }
 }
