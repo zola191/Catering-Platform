@@ -2,7 +2,7 @@
 
 public class UpdateTenantRequest
 {
-    public string Name { get; set; }
+    public string Name { get; init; }
     public static void MapToDomain(Models.Tenant entity, UpdateTenantRequest request)
     {
         entity.Name = request.Name;

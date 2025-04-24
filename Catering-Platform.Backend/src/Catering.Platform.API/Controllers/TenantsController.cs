@@ -1,4 +1,5 @@
-﻿using Catering.Platform.Applications.Abstractions;
+﻿using Catering.Platform.API.Validators.Tenants;
+using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Requests.Tenant;
 using FluentValidation;
@@ -50,7 +51,7 @@ namespace Catering.Platform.API.Controllers
         [FromBody] CreateTenantRequest request)
         {
             var validationResult = await _createTenantRequestValidator.ValidateAsync(request);
-            if (!validationResult.IsValid)
+            if (validationResult.IsValid==false)
             {
                 _logger.LogInformation(
                 "Validation failed for CreateTenantRequest. Errors: {ValidationErrors}",
@@ -65,7 +66,7 @@ namespace Catering.Platform.API.Controllers
         public async Task<IActionResult> Update([FromRoute]Guid id, [FromBody] UpdateTenantRequest request)
         {
             var validationResult = await _updateTenantRequestValidator.ValidateAsync(request);
-            if (!validationResult.IsValid)
+            if (validationResult.IsValid == false)
             {
                 return BadRequest(validationResult.Errors);
             }
@@ -98,11 +99,28 @@ namespace Catering.Platform.API.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        public async Task<ActionResult> Delete(
-        [FromRoute] Guid id)
+        public async Task<ActionResult> Delete([FromRoute] Guid id)
         {
             await _tenantService.DeleteAsync(id);
             return NoContent();
+        }
+
+        [HttpPut("{id:guid}")]
+        public async Task<ActionResult> Block(
+            [FromRoute] Guid id, 
+            [FromBody] BlockTenantRequest request,
+            [FromServices] BlockTenantRequestValidator validator)
+        {
+            var validationResult = await validator.ValidateAsync(request);
+            if (validationResult.IsValid == false)
+            {
+                _logger.LogInformation(
+                "Validation failed for BlockTenantRequest. Errors: {ValidationErrors}",
+                validationResult.Errors);
+                return BadRequest(validationResult.Errors);
+            }
+            var result = await _tenantService.BlockTenantAsync(id, request);
+            return Ok(result);
         }
     }
 }
