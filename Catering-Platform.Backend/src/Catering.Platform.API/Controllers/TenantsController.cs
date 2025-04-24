@@ -105,7 +105,7 @@ namespace Catering.Platform.API.Controllers
             return NoContent();
         }
 
-        [HttpPut("{id:guid}")]
+        [HttpPut("{id:guid}/block")]
         public async Task<ActionResult> Block(
             [FromRoute] Guid id, 
             [FromBody] BlockTenantRequest request,
