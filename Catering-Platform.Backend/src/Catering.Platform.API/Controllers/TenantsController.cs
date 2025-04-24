@@ -3,7 +3,6 @@ using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Requests.Tenant;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace Catering.Platform.API.Controllers
 {
@@ -96,6 +95,13 @@ namespace Catering.Platform.API.Controllers
                     Status = StatusCodes.Status500InternalServerError
                 });
             }
+        }
+
+        [HttpDelete("{id:guid}")]
+        public async Task<ActionResult<Guid>> Delete(
+        [FromRoute] Guid id)
+        {
+            var result = await _tenantService.DeleteAsync(id);
         }
     }
 }
