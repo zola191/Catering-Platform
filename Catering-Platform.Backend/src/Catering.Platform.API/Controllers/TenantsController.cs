@@ -98,10 +98,11 @@ namespace Catering.Platform.API.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        public async Task<ActionResult<Guid>> Delete(
+        public async Task<ActionResult> Delete(
         [FromRoute] Guid id)
         {
-            var result = await _tenantService.DeleteAsync(id);
+            await _tenantService.DeleteAsync(id);
+            return NoContent();
         }
     }
 }

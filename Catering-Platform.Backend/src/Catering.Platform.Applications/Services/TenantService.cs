@@ -39,6 +39,35 @@ namespace Catering.Platform.Applications.Services
             }
         }
 
+        public async Task DeleteAsync(Guid id)
+        {
+            //TODO обработать случай - Нельзя удалить tenant'а, если он связан с активными заказами
+            try
+            {
+                var existingTenant = await _repository.GetByIdAsync(id);
+                if (existingTenant == null)
+                {
+                    throw new TenantNotFoundException();
+                }
+                _repository.Delete(existingTenant);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            catch (TenantNotFoundException ex)
+            {
+                _logger.LogError(
+                "Tenant is not found {Id}. See Details: {Details}", id, ex.Message);
+                throw;
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    "Unable to delete tenant. See Details: {Details}", ex.Message);
+                throw;
+            }
+        }
+
         public async Task<IEnumerable<TenantViewModel>> GetAllAsync()
         {
             try
