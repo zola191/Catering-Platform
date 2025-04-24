@@ -29,5 +29,20 @@ namespace Catering.Platform.Persistence.Repositories
             await DbContext.SaveChangesAsync();
             return tenant;
         }
+
+        public async Task<Tenant> UnBlockAsync(Guid id)
+        {
+            var tenant = await DbContext.Set<Tenant>().FirstOrDefaultAsync(x => x.Id.Equals(id));
+
+            if (tenant == null)
+                throw new TenantNotFoundException();
+
+            tenant.IsActive = true;
+            tenant.BlockReason = string.Empty;
+            tenant.UpdatedAt = DateTime.UtcNow;
+
+            await DbContext.SaveChangesAsync();
+            return tenant.Id;
+        }
     }
 }

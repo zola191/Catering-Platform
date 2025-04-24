@@ -124,6 +124,12 @@ namespace Catering.Platform.Applications.Services
             }
         }
 
+        public async Task<TenantViewModel> UnblockTenantAsync(Guid tenantId)
+        {
+            var existingTenant = await _repository.UnBlockAsync(tenantId);
+            return TenantViewModel.MapToViewModel(existingTenant);
+        }
+
         public async Task<Guid> UpdateAsync(Guid id, UpdateTenantRequest request)
         {
             try
