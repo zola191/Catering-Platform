@@ -37,12 +37,15 @@ namespace Catering.Platform.Persistence.Repositories
             if (tenant == null)
                 throw new TenantNotFoundException();
 
+            if (tenant.IsActive == true)
+                throw new TenantHasActiveDataException();
+
             tenant.IsActive = true;
             tenant.BlockReason = string.Empty;
             tenant.UpdatedAt = DateTime.UtcNow;
 
             await DbContext.SaveChangesAsync();
-            return tenant.Id;
+            return tenant;
         }
     }
 }

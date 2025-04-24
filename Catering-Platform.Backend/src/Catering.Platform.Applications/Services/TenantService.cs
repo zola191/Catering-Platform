@@ -59,6 +59,12 @@ namespace Catering.Platform.Applications.Services
             }
         }
 
+        public async Task<TenantViewModel> UnblockTenantAsync(Guid id)
+        {
+            var existingTenant = await _repository.UnBlockAsync(id);
+            return TenantViewModel.MapToViewModel(existingTenant);
+        }
+
         public async Task DeleteAsync(Guid id)
         {
             //TODO обработать случай - Нельзя удалить tenant'а, если он связан с активными заказами
@@ -122,12 +128,6 @@ namespace Catering.Platform.Applications.Services
                     "Unable to fetch tenant by id {Id}. See Details: {Details}", id, ex.Message);
                 throw;
             }
-        }
-
-        public async Task<TenantViewModel> UnblockTenantAsync(Guid tenantId)
-        {
-            var existingTenant = await _repository.UnBlockAsync(tenantId);
-            return TenantViewModel.MapToViewModel(existingTenant);
         }
 
         public async Task<Guid> UpdateAsync(Guid id, UpdateTenantRequest request)
