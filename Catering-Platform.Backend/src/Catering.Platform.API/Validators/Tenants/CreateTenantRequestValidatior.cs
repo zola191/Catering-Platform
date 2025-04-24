@@ -1,4 +1,4 @@
-﻿using Catering.Platform.Domain.Requests;
+﻿using Catering.Platform.Domain.Requests.Tenant;
 using Catering.Platform.Domain.Shared;
 using FluentValidation;
 

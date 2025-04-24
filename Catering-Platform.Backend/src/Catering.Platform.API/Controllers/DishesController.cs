@@ -1,5 +1,5 @@
 ﻿using Catering.Platform.Applications.Abstractions;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Dish;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Platform.API.Controllers;

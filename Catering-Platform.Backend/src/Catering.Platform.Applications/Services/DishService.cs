@@ -2,7 +2,7 @@
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Repositories;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Dish;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;

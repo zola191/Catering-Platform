@@ -1,5 +1,5 @@
 ﻿using Catering.Platform.Applications.ViewModels;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Dish;
 
 namespace Catering.Platform.Applications.Abstractions;
 

@@ -1,14 +1,13 @@
 using AutoFixture;
 using Catering.Platform.API.Controllers;
-using Catering.Platform.API.Validators.Tenants;
 using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
-using Catering.Platform.Domain.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using FluentValidation.Results;
 using FluentValidation;
+using Catering.Platform.Domain.Requests.Tenant;
 
 namespace Catering.Platform.UnitTests
 {
@@ -81,7 +80,7 @@ namespace Catering.Platform.UnitTests
                 .Returns(Task.FromResult<TenantViewModel?>(expectedViewModel));
 
             // Act
-            var result = await _controller.GetById(expectedViewModel.Id, CancellationToken.None);
+            var result = await _controller.GetById(expectedViewModel.Id);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -98,11 +97,11 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var tenantId = Guid.NewGuid();
-            _mockTenantService.GetByIdAsync(tenantId, CancellationToken.None)
+            _mockTenantService.GetByIdAsync(tenantId)
                 .Returns(Task.FromResult<TenantViewModel?>(null));
 
             // Act
-            var result = await _controller.GetById(tenantId, CancellationToken.None);
+            var result = await _controller.GetById(tenantId);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -116,14 +115,14 @@ namespace Catering.Platform.UnitTests
             var validationResult = new ValidationResult();
             var expectedResult = Guid.NewGuid();
 
-            _mockCreateTenantRequestValidatior.ValidateAsync(request, CancellationToken.None)
+            _mockCreateTenantRequestValidatior.ValidateAsync(request)
                 .Returns(Task.FromResult(validationResult));
 
-            _mockTenantService.AddAsync(request, CancellationToken.None)
+            _mockTenantService.AddAsync(request)
                 .Returns(Task.FromResult(expectedResult));
 
             // Act
-            var result = await _controller.Create(request, CancellationToken.None);
+            var result = await _controller.Create(request);
 
             // Assert
             var actionResult = Assert.IsType<ActionResult<Guid>>(result);
@@ -144,11 +143,11 @@ namespace Catering.Platform.UnitTests
                 new ValidationFailure("Name", "Name is required")
             });
 
-            _mockCreateTenantRequestValidatior.ValidateAsync(request, CancellationToken.None)
+            _mockCreateTenantRequestValidatior.ValidateAsync(request)
                 .Returns(Task.FromResult(validationResult));
 
             // Act
-            var result = await _controller.Create(request, CancellationToken.None);
+            var result = await _controller.Create(request);
 
             // Assert
             var actionResult = Assert.IsType<ActionResult<Guid>>(result);

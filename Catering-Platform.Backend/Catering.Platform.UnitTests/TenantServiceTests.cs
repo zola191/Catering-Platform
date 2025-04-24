@@ -4,7 +4,7 @@ using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Services;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 

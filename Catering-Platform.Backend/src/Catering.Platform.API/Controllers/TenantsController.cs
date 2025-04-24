@@ -1,5 +1,6 @@
 ﻿using Catering.Platform.Applications.Abstractions;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Category;
+using Catering.Platform.Domain.Requests.Tenant;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,8 +15,8 @@ namespace Catering.Platform.API.Controllers
         private readonly ILogger<TenantsController> _logger;
 
         public TenantsController(
-            ITenantService tenantService, 
-            IValidator<CreateTenantRequest> createTenantRequest, 
+            ITenantService tenantService,
+            IValidator<CreateTenantRequest> createTenantRequest,
             ILogger<TenantsController> logger)
         {
             _tenantService = tenantService;
@@ -31,9 +32,9 @@ namespace Catering.Platform.API.Controllers
         }
 
         [HttpGet("{tenantId}")]
-        public async Task<ActionResult> GetById([FromRoute] Guid id, CancellationToken ct)
+        public async Task<ActionResult> GetById([FromRoute] Guid id)
         {
-            var viewModel = await _tenantService.GetByIdAsync(id, ct);
+            var viewModel = await _tenantService.GetByIdAsync(id);
             if (viewModel == null)
             {
                 return NotFound();
@@ -43,10 +44,9 @@ namespace Catering.Platform.API.Controllers
 
         [HttpPost]
         public async Task<ActionResult<Guid>> Create(
-        [FromBody] CreateTenantRequest request,
-        CancellationToken ct = default)
+        [FromBody] CreateTenantRequest request)
         {
-            var validationResult = await _createTenantRequestValidator.ValidateAsync(request, ct);
+            var validationResult = await _createTenantRequestValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
                 _logger.LogInformation(
@@ -54,8 +54,17 @@ namespace Catering.Platform.API.Controllers
                 validationResult.Errors);
                 return BadRequest(validationResult.Errors);
             }
-            var result = await _tenantService.AddAsync(request, ct);
+            var result = await _tenantService.AddAsync(request);
             return Ok(result);
+        }
+
+        [HttpPut("{id:guid}")]
+        public async Task<ActionResult<Guid>> Update(
+        [FromRoute] Guid id,
+        [FromBody] UpdateTenantRequest request)
+        {
+            
+            return Ok();
         }
     }
 }

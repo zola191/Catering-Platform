@@ -1,7 +1,7 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Repositories;
-using Catering.Platform.Domain.Requests;
+using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services
@@ -19,13 +19,13 @@ namespace Catering.Platform.Applications.Services
             _logger = logger;
         }
 
-        public async Task<Guid> AddAsync(CreateTenantRequest request, CancellationToken cancellationToken = default)
+        public async Task<Guid> AddAsync(CreateTenantRequest request)
         {
             try
             {
                 var tenant = CreateTenantRequest.MapToDomain(request);
-                var result = await _repository.AddAsync(tenant, cancellationToken);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                var result = await _repository.AddAsync(tenant);
+                await _unitOfWork.SaveChangesAsync();
                 return result;
             }
             catch (Exception ex)
@@ -72,6 +72,11 @@ namespace Catering.Platform.Applications.Services
                     "Unable to fetch tenant by id {Id}. See Details: {Details}", id, ex.Message);
                 throw;
             }
+        }
+
+        public Task<TenantViewModel> UpdateTenantAsync(UpdateTenantRequest request)
+        {
+            throw new NotImplementedException();
         }
     }
 }
