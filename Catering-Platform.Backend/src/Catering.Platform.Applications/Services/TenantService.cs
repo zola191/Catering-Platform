@@ -1,10 +1,11 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Exceptions;
-using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Tenant;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace Catering.Platform.Applications.Services
 {
@@ -12,12 +13,18 @@ namespace Catering.Platform.Applications.Services
     {
         private readonly ITenantRepository _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IDistributedCache _distributedCache;
         private readonly ILogger<ITenantService> _logger;
 
-        public TenantService(ITenantRepository repository, IUnitOfWork unitOfWork, ILogger<ITenantService> logger)
+        public TenantService(
+            ITenantRepository repository,
+            IUnitOfWork unitOfWork,
+            IDistributedCache distributedCache,
+            ILogger<ITenantService> logger)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _distributedCache = distributedCache;
             _logger = logger;
         }
 
@@ -112,6 +119,14 @@ namespace Catering.Platform.Applications.Services
 
         public async Task<TenantViewModel?> GetByIdAsync(Guid id)
         {
+            var cacheKey = $"tenant_{id}";
+            var json = await _distributedCache.GetStringAsync(cacheKey);
+
+            if (string.IsNullOrWhiteSpace(json) is false)
+            {
+                return JsonSerializer.Deserialize<TenantViewModel>(json);
+            }
+
             try
             {
                 var existingTenant = await _repository.GetByIdAsync(id);
@@ -119,7 +134,12 @@ namespace Catering.Platform.Applications.Services
                 {
                     return null;
                 }
-                return TenantViewModel.MapToViewModel(existingTenant);
+                var tempViewModel = TenantViewModel.MapToViewModel(existingTenant);
+                var tempJson = JsonSerializer.Serialize(tempViewModel);
+                _distributedCache.SetString(cacheKey, tempJson);
+                // TODO добавить DistributedCacheEntryOptions и потестить AbsoluteExpirationRelativeToNow
+                Task.Delay(1000).Wait();
+                return tempViewModel;
             }
 
             catch (Exception ex)
