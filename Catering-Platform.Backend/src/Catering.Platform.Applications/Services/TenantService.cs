@@ -31,5 +31,25 @@ namespace Catering.Platform.Applications.Services
                 throw;
             }
         }
+
+        public async Task<TenantViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var existingTenant = await _repository.GetByIdAsync(id, cancellationToken);
+                if (existingTenant == null)
+                {
+                    return null;
+                }
+                return TenantViewModel.MapToViewModel(existingTenant);
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    "Unable to fetch tenant by id {Id}. See Details: {Details}", id, ex.Message);
+                throw;
+            }
+        }
     }
 }
