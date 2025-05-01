@@ -29,7 +29,7 @@ public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery,
             var category = await _categoryRepository.GetByIdAsync(query.Id, cancellationToken);
             if (category == null)
             {
-                throw new CategoryNotFoundException();
+                return null;
             }
 
             return category;
