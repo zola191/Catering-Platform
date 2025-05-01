@@ -16,14 +16,13 @@ namespace Catering.Platform.Applications.Services
             _logger = logger;
         }
 
-
         public async Task<IEnumerable<TenantViewModel>> GetAllAsync()
         {
             try
             {
                 var existingTenants = await _repository.GetAllAsync();
-                var existingTenantViewmodels = existingTenants.Select(TenantViewModel.MapToViewModel).ToList();
-                return existingTenantViewmodels;
+                var existingTenantViewModels = existingTenants.Select(TenantViewModel.MapToViewModel).ToList();
+                return existingTenantViewModels;
             }
             catch (Exception ex)
             {
