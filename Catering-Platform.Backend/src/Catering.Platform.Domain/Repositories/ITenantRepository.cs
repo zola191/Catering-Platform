@@ -2,8 +2,8 @@
 
 namespace Catering.Platform.Domain.Repositories
 {
-    public interface ITenantRepository
+    public interface ITenantRepository : IRepository<Tenant>
     {
-        Task<IEnumerable<Tenant>> GetAllAsync();
+
     }
 }

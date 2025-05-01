@@ -29,7 +29,7 @@ where T : Entity
     /// Возвращает все элементы
     /// </summary>
     /// <returns></returns>
-    Task<List<T>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<T>> GetAllAsync();
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid> AddAsync(T entity, CancellationToken cancellationToken = default);
     Guid Update(T entity);

@@ -20,5 +20,16 @@ namespace Catering.Platform.API.Controllers
             var viewModels = await _tenantService.GetAllAsync();
             return Ok(viewModels);
         }
+
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult> GetById([FromRoute] Guid id, CancellationToken ct)
+        {
+            var viewModel = await _tenantService.GetByIdAsync(id, ct);
+            if (viewModel == null)
+            {
+                return NotFound();
+            }
+            return Ok(viewModel);
+        }
     }
 }
