@@ -55,7 +55,7 @@ namespace Catering.Platform.API.Controllers
                 return BadRequest(validationResult.Errors);
             }
             var result = await _tenantService.AddAsync(request, ct);
-            return Created("", result);
+            return Created(new Uri($"/tenants/{result}", UriKind.Relative), result);
         }
     }
 }
