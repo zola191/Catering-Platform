@@ -1,5 +1,6 @@
 ﻿
 using Catering.Platform.Domain.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.API.Middlewares
 {
@@ -25,6 +26,11 @@ namespace Catering.Platform.API.Middlewares
                         _logger.LogError("Tenant already blocked.");
                         context.Response.StatusCode = 400;
                         await context.Response.WriteAsync(tenantAlreadyBlockException.Message);
+                        break;
+                    case TenantInactiveException tenantInactiveException:
+                        _logger.LogError(tenantInactiveException.Message);
+                        context.Response.StatusCode = 400;
+                        await context.Response.WriteAsync(tenantInactiveException.Message);
                         break;
                     default:
                         context.Response.StatusCode = 500;
