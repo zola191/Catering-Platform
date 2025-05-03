@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Catering.Platform.Domain.Shared;
 using Catering.Platform.API.Validators.Tenants;
 
-namespace Catering.Platform.UnitTests
+namespace Catering.Platform.UnitTests.Tenant
 {
     public class TenantsControllerTests
     {
@@ -127,7 +127,7 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var request = _fixture.Create<CreateTenantRequest>();
-            var validationResult = new FluentValidation.Results.ValidationResult();
+            var validationResult = new ValidationResult();
             var expectedResult = Guid.NewGuid();
 
             _mockCreateTenantRequestValidatior.ValidateAsync(request)
@@ -153,7 +153,7 @@ namespace Catering.Platform.UnitTests
             var request = _fixture.Build<CreateTenantRequest>()
                 .With(f => f.Name, string.Empty)
                 .Create();
-            var validationResult = new FluentValidation.Results.ValidationResult(new List<ValidationFailure>
+            var validationResult = new ValidationResult(new List<ValidationFailure>
             {
                 new ValidationFailure("Name", "Name is required")
             });
@@ -179,7 +179,7 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var requestId = Guid.NewGuid();
             var request = _fixture.Create<UpdateTenantRequest>();
-            var validationResult = new FluentValidation.Results.ValidationResult();
+            var validationResult = new ValidationResult();
 
             _mockUpdateTenantRequestValidatior.ValidateAsync(request)
                 .Returns(Task.FromResult(validationResult));
@@ -204,7 +204,7 @@ namespace Catering.Platform.UnitTests
             var request = _fixture.Build<UpdateTenantRequest>()
                 .With(f => f.Name, string.Empty)
                 .Create();
-            var validationResult = new FluentValidation.Results.ValidationResult(new List<ValidationFailure>
+            var validationResult = new ValidationResult(new List<ValidationFailure>
             {
                 new ValidationFailure("Name", "Name is required")
             });
@@ -229,7 +229,7 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var requestId = Guid.NewGuid();
             var request = _fixture.Create<UpdateTenantRequest>();
-            var validationResult = new FluentValidation.Results.ValidationResult();
+            var validationResult = new ValidationResult();
 
             _mockUpdateTenantRequestValidatior.ValidateAsync(request)
                 .Returns(Task.FromResult(validationResult));
@@ -279,7 +279,7 @@ namespace Catering.Platform.UnitTests
             // Act
             var exception = await Assert.ThrowsAsync<TenantNotFoundException>(
                 () => _controller.Delete(tenantId));
-            
+
             // Assert
             Assert.Equal(ErrorMessages.TenantNotFound, exception.Message);
             await _mockTenantService.Received(1).DeleteAsync(tenantId);

@@ -7,4 +7,5 @@ public class Tenant : Entity
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string? BlockReason { get; set; }
+    public List<Address> Addresses { get; set; } = new List<Address>();
 }
