@@ -14,8 +14,8 @@ public class AddressesController : ControllerBase
     private readonly ILogger<TenantsController> _logger;
 
     public AddressesController(
-        IAddressService addressService, 
-        IValidator<CreateAddressViewModel> createAdressViewModelValidator, 
+        IAddressService addressService,
+        IValidator<CreateAddressViewModel> createAdressViewModelValidator,
         ILogger<TenantsController> logger)
     {
         _addressService = addressService;
@@ -23,8 +23,8 @@ public class AddressesController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Guid>> Create(
+    [HttpPost("{tenantId}")]
+    public async Task<IActionResult> Create(
     [FromRoute] Guid tenantId,
     [FromBody] CreateAddressViewModel request)
     {
@@ -36,7 +36,14 @@ public class AddressesController : ControllerBase
             validationResult.Errors);
             return BadRequest(validationResult.Errors);
         }
-        var result = await _addressService.CreateAddressAsync(request,tenantId);
-        return Ok(result);
+        try
+        {
+            var addressId = await _addressService.CreateAddressAsync(request, tenantId);
+            return Created(new Uri($"/api/addresses/{addressId}", UriKind.Relative), addressId);
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
     }
 }
