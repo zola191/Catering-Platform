@@ -7,6 +7,7 @@ using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Tenant;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -20,6 +21,7 @@ namespace Catering.Platform.UnitTests
         private readonly ITenantRepository _mockRepository;
         private readonly ITenantService _tenantService;
         private readonly IUnitOfWork _mockUnitOfWork;
+        private readonly IDistributedCache _mockCache;
         private readonly ILogger<ITenantService> _mockLogger;
         private readonly Fixture _fixture;
 
@@ -30,8 +32,9 @@ namespace Catering.Platform.UnitTests
             _fixture.Customize(new AutoNSubstituteCustomization());
             _mockLogger = Substitute.For<ILogger<TenantService>>();
             _mockRepository = Substitute.For<ITenantRepository>();
+            _mockCache = Substitute.For<IDistributedCache>();
             _mockUnitOfWork = Substitute.For<IUnitOfWork>();
-            _tenantService = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+            _tenantService = new TenantService(_mockRepository, _mockUnitOfWork, _mockCache, _mockLogger);
         }
 
         [Fact]
@@ -120,7 +123,7 @@ namespace Catering.Platform.UnitTests
             _mockUnitOfWork.SaveChangesAsync()
                 .Returns(Task.FromResult(1));
 
-            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockCache, _mockLogger);
 
             // Act
             var result = await service.AddAsync(request);
@@ -151,7 +154,7 @@ namespace Catering.Platform.UnitTests
             _mockUnitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(1));
 
-            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockCache, _mockLogger);
 
             // Act
             var result = await service.UpdateAsync(id, request);
@@ -174,7 +177,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetByIdAsync(id)
                 .Returns(Task.FromResult<Tenant>(null));
 
-            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockCache, _mockLogger);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<TenantNotFoundException>(
@@ -199,7 +202,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.Update(existingTenant)
                 .Throws(new InvalidOperationException("Database error"));
 
-            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+            var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockCache, _mockLogger);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(
