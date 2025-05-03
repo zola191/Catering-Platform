@@ -12,14 +12,14 @@ public class DishService : IDishService
     private readonly IDishRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<IDishService> _logger;
-    
+
     public DishService(IDishRepository repository, IUnitOfWork unitOfWork, ILogger<IDishService> logger)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
-    
+
     public async Task<List<DishViewModel>> GetAllAsync()
     {
         try
@@ -72,6 +72,7 @@ public class DishService : IDishService
             await _unitOfWork.SaveChangesAsync();
             return result;
         }
+
         catch (Exception ex)
         {
             _logger.LogError(
@@ -92,8 +93,8 @@ public class DishService : IDishService
             {
                 throw new DishNotFoundException();
             }
-            UpdateDishRequest.MapToDomain(existingDish,request);
-            
+            UpdateDishRequest.MapToDomain(existingDish, request);
+
             var result = _repository.Update(existingDish);
             await _unitOfWork.SaveChangesAsync();
             return result;

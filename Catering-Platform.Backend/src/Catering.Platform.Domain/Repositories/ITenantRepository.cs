@@ -4,7 +4,7 @@ namespace Catering.Platform.Domain.Repositories
 {
     public interface ITenantRepository : IRepository<Tenant>
     {
-        Task<Tenant> BlockAsync(Guid id, string blockReason);
-        Task<Tenant> UnBlockAsync(Guid id);
+        Task<Tenant> BlockAsync(Tenant tenant, string blockReason);
+        Task<Tenant> UnBlockAsync(Tenant tenant);
     }
 }
