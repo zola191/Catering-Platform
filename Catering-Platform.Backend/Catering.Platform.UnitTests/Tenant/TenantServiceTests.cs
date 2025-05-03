@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
-namespace Catering.Platform.UnitTests
+namespace Catering.Platform.UnitTests.Tenant
 {
     public class TenantServiceTests
     {
@@ -41,7 +41,7 @@ namespace Catering.Platform.UnitTests
         public async Task GetAllAsync_ReturnsMappedTenantViewModels()
         {
             // Arrange
-            var tenants = _fixture.CreateMany<Tenant>(2).ToList();
+            var tenants = _fixture.CreateMany<Domain.Models.Tenant>(2).ToList();
             _mockRepository.GetAllAsync().Returns(Task.FromResult(tenants));
 
             // Act
@@ -65,7 +65,7 @@ namespace Catering.Platform.UnitTests
         public async Task GetAllAsync_ReturnsEmptyList_WhenNoTenantsExist()
         {
             // Arrange
-            _mockRepository.GetAllAsync().Returns(Task.FromResult<List<Tenant>>(new List<Tenant>()));
+            _mockRepository.GetAllAsync().Returns(Task.FromResult(new List<Domain.Models.Tenant>()));
 
             // Act
             var result = await _tenantService.GetAllAsync();
@@ -79,7 +79,7 @@ namespace Catering.Platform.UnitTests
         public async Task GetByIdAsync_ReturnsMappedTenantViewModel_WhenTenantExist()
         {
             // Arrange
-            var tenant = _fixture.Create<Tenant>();
+            var tenant = _fixture.Create<Domain.Models.Tenant>();
             var tenantId = tenant.Id;
             _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult(tenant));
 
@@ -88,7 +88,7 @@ namespace Catering.Platform.UnitTests
 
             // Assert
             Assert.NotNull(result);
-            
+
             Assert.Equal(tenant.Id, result.Id);
             Assert.Equal(tenant.Name, result.Name);
             Assert.Equal(tenant.IsActive, result.IsActive);
@@ -100,7 +100,7 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var tenantId = Guid.NewGuid();
-            _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult<Tenant>(null));
+            _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult<Domain.Models.Tenant>(null));
 
             // Act
             var result = await _tenantService.GetByIdAsync(tenantId);
@@ -117,7 +117,7 @@ namespace Catering.Platform.UnitTests
             var tenant = CreateTenantRequest.MapToDomain(request);
             var expectedResult = Guid.NewGuid();
 
-            _mockRepository.AddAsync(Arg.Any<Tenant>())
+            _mockRepository.AddAsync(Arg.Any<Domain.Models.Tenant>())
                 .Returns(Task.FromResult(expectedResult));
 
             _mockUnitOfWork.SaveChangesAsync()
@@ -131,7 +131,7 @@ namespace Catering.Platform.UnitTests
             // Assert
             Assert.Equal(expectedResult, result);
 
-            await _mockRepository.Received(1).AddAsync(Arg.Any<Tenant>());
+            await _mockRepository.Received(1).AddAsync(Arg.Any<Domain.Models.Tenant>());
             await _mockUnitOfWork.Received(1).SaveChangesAsync();
         }
 
@@ -141,7 +141,7 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var id = Guid.NewGuid();
             var request = _fixture.Create<UpdateTenantRequest>();
-            var existingTenant = _fixture.Build<Tenant>()
+            var existingTenant = _fixture.Build<Domain.Models.Tenant>()
                 .With(t => t.Id, id)
                 .Create();
 
@@ -163,7 +163,7 @@ namespace Catering.Platform.UnitTests
             Assert.Equal(existingTenant.Id, result);
 
             await _mockRepository.Received(1).GetByIdAsync(id);
-            _mockRepository.Received(1).Update(Arg.Is<Tenant>(t => t.Id == id));
+            _mockRepository.Received(1).Update(Arg.Is<Domain.Models.Tenant>(t => t.Id == id));
             await _mockUnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         }
 
@@ -175,7 +175,7 @@ namespace Catering.Platform.UnitTests
             var request = _fixture.Create<UpdateTenantRequest>();
 
             _mockRepository.GetByIdAsync(id)
-                .Returns(Task.FromResult<Tenant>(null));
+                .Returns(Task.FromResult<Domain.Models.Tenant>(null));
 
             var service = new TenantService(_mockRepository, _mockUnitOfWork, _mockCache, _mockLogger);
 
@@ -192,7 +192,7 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var id = Guid.NewGuid();
             var request = _fixture.Create<UpdateTenantRequest>();
-            var existingTenant = _fixture.Build<Tenant>()
+            var existingTenant = _fixture.Build<Domain.Models.Tenant>()
                 .With(t => t.Id, id)
                 .Create();
 
@@ -215,7 +215,7 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var tenantId = Guid.NewGuid();
-            var existingTenant = _fixture.Create<Tenant>();
+            var existingTenant = _fixture.Create<Domain.Models.Tenant>();
 
             _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult(existingTenant));
             _mockUnitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
@@ -234,14 +234,14 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var tenantId = Guid.NewGuid();
-            _mockRepository.GetByIdAsync(tenantId).Returns((Tenant?)null);
+            _mockRepository.GetByIdAsync(tenantId).Returns((Domain.Models.Tenant?)null);
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<TenantNotFoundException>(
                 () => _tenantService.DeleteAsync(tenantId));
-            
+
             // Assert
-            _mockRepository.DidNotReceiveWithAnyArgs().Delete(Arg.Any<Tenant>());
+            _mockRepository.DidNotReceiveWithAnyArgs().Delete(Arg.Any<Domain.Models.Tenant>());
             await _mockUnitOfWork.DidNotReceive().SaveChangesAsync();
         }
 
@@ -251,7 +251,7 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var tenantId = Guid.NewGuid();
             var request = _fixture.Create<BlockTenantRequest>();
-            var tenant = _fixture.Build<Tenant>()
+            var tenant = _fixture.Build<Domain.Models.Tenant>()
                 .With(t => t.Id, tenantId)
                 .With(t => t.IsActive, true)
                 .Create();
@@ -303,7 +303,7 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var tenantId = Guid.NewGuid();
-            var tenant = _fixture.Build<Tenant>()
+            var tenant = _fixture.Build<Domain.Models.Tenant>()
                 .With(t => t.Id, tenantId)
                 .With(t => t.IsActive, false)
                 .Create();

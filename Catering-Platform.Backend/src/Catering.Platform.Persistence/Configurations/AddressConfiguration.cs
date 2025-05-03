@@ -2,6 +2,8 @@
 using Catering.Platform.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Catering.Platform.Persistence.Configurations
 {
@@ -21,6 +23,7 @@ namespace Catering.Platform.Persistence.Configurations
             builder.Property(f => f.Description).HasMaxLength(Constants.MAX_TEXT_LENGTH_512);
             builder.Property(f => f.CreatedAt).IsRequired();
             builder.Property(f => f.UpdatedAt);
+
 
             builder.HasOne(f => f.Tenant).WithMany(f => f.Addresses).HasForeignKey(f => f.TenantId);
 

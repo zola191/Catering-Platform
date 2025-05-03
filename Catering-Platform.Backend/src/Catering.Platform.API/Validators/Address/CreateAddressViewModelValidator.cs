@@ -18,7 +18,8 @@ public class CreateAddressViewModelValidator : AbstractValidator<CreateAddressVi
 
         RuleFor(f => f.Zip)
             .NotEmpty().WithMessage("Zip code is required")
-            .MaximumLength(Constants.MAX_TEXT_LENGTH_6).WithMessage($"Zip code must not exceed {Constants.MAX_TEXT_LENGTH_6} characters");
+            .MaximumLength(Constants.MAX_TEXT_LENGTH_6).WithMessage($"Zip code must not exceed {Constants.MAX_TEXT_LENGTH_6} characters")
+            .Matches(@"^\d+$").WithMessage("Zip code must contain only digits");
 
         RuleFor(f => f.City)
             .NotEmpty().WithMessage("City is required")
