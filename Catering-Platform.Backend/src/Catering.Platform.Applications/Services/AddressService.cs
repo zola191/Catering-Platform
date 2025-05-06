@@ -46,14 +46,15 @@ public class AddressService : IAddressService
             var result = AddressViewModel.MapToViewModel(entity);
             return result;
         }
-        catch (TenantNotFoundException ex)
+        catch (TenantNotFoundException ex) 
+        // сделать generic exception для NotFoundException т.к. может быть и в других сервисах
         {
-            _logger.LogWarning("Tenant not found. TenantId: {TenantId}", tenantId);
+            _logger.LogError("Tenant not found. TenantId: {TenantId}", tenantId);
             throw;
         }
         catch (TenantInactiveException ex)
         {
-            _logger.LogWarning("Attempt to use inactive tenant. TenantId: {TenantId}", tenantId);
+            _logger.LogError("Attempt to use inactive tenant. TenantId: {TenantId}", tenantId);
             throw;
         }
         catch (Exception ex)
