@@ -37,16 +37,9 @@ public class AddressesController : ControllerBase
             validationResult.Errors);
             return BadRequest(validationResult.Errors);
         }
-        try
-        {
-            var addressViewModel = await _addressService.CreateAddressAsync(request, tenantId);
-            return Created(
-                new Uri($"/api/addresses/{addressViewModel.Id}", UriKind.Relative),
-                addressViewModel);
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
+        var addressViewModel = await _addressService.CreateAddressAsync(request, tenantId);
+        return Created(
+            new Uri($"/api/addresses/{addressViewModel.Id}", UriKind.Relative),
+            addressViewModel);
     }
 }
