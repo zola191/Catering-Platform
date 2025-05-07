@@ -7,5 +7,6 @@ namespace Catering.Platform.Domain.Repositories
         Task AddAsync(Address address);
         void Update(Address address);
         void Delete(Address address);
+        Task<Address?> GetByIdAsync(Guid addressId);
     }
 }

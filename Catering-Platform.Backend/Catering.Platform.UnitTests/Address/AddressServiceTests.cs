@@ -254,4 +254,85 @@ public class AddressServiceTests
             .Should().ThrowAsync<NotFoundException>()
             .Where(ex => ex.EntityName == nameof(Address) && ex.EntityId.ToString() == addressId.ToString());
     }
+
+    [Fact]
+    public async Task GetAddressByIdAsync_ValidTenantAndAddress_ReturnsViewModel()
+    {
+        // Arrange
+        var tenantId = _fixture.Create<Guid>();
+        var addressId = _fixture.Create<Guid>();
+
+        var address = new Domain.Models.Address
+        {
+            Id = addressId,
+            TenantId = tenantId
+        };
+
+        var tenant = new Domain.Models.Tenant
+        {
+            Id = tenantId,
+            IsActive = true
+        };
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(Task.FromResult(tenant));
+        _addressRepo.GetByIdAsync(addressId).Returns(address);
+
+        // Act
+        var result = await _service.GetAddressByIdAsync(addressId, tenantId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(addressId);
+    }
+
+    [Fact]
+    public async Task GetAddressByIdAsync_AddressDoesNotExist_ThrowsNotFoundException()
+    {
+        // Arrange
+        var tenantId = _fixture.Create<Guid>();
+        var addressId = _fixture.Create<Guid>();
+
+        var tenant = new Domain.Models.Tenant
+        {
+            Id = tenantId,
+            IsActive = true
+        };
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(Task.FromResult(tenant));
+        _addressRepo.GetByIdAsync(addressId).Returns((Domain.Models.Address)null);
+
+        // Act & Assert
+        await _service.Invoking(s => s.GetAddressByIdAsync(addressId, tenantId))
+            .Should().ThrowAsync<NotFoundException>()
+            .Where(ex => ex.EntityName == nameof(Address) && ex.EntityId.ToString() == addressId.ToString());
+    }
+
+    [Fact]
+    public async Task GetAddressByIdAsync_AddressBelongsToAnotherTenant_ThrowsNotFoundException()
+    {
+        // Arrange
+        var tenantId = _fixture.Create<Guid>();
+        var anotherTenantId = _fixture.Create<Guid>();
+        var addressId = _fixture.Create<Guid>();
+
+        var address = new Domain.Models.Address
+        {
+            Id = addressId,
+            TenantId = anotherTenantId
+        };
+
+        var tenant = new Domain.Models.Tenant
+        {
+            Id = tenantId,
+            IsActive = true
+        };
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(Task.FromResult(tenant));
+        _addressRepo.GetByIdAsync(addressId).Returns(address);
+
+        // Act & Assert
+        await _service.Invoking(s => s.GetAddressByIdAsync(addressId, tenantId))
+            .Should().ThrowAsync<NotFoundException>()
+            .Where(ex => ex.EntityName == nameof(Address) && ex.EntityId.ToString() == addressId.ToString());
+    }
 }

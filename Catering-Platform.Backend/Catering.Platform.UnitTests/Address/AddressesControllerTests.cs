@@ -293,4 +293,42 @@ public class AddressesControllerTests
             .Where(ex => ex.EntityName == nameof(Domain.Models.Address) &&
                          ex.EntityId.ToString() == addressId.ToString());
     }
+
+    [Fact]
+    public async Task Get_ExistingAddress_ReturnsOkWithViewModel()
+    {
+        // Arrange
+        var addressId = _fixture.Create<Guid>();
+        var viewModel = new AddressViewModel
+        {
+            Id = addressId
+        };
+
+        _mockAddressService
+            .GetAddressByIdAsync(addressId, Arg.Any<Guid>())
+            .Returns(viewModel);
+
+        // Act
+        var result = await _controller.Get(addressId);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeSameAs(viewModel);
+    }
+
+    [Fact]
+    public async Task Get_NonExistingAddress_ThrowsNotFoundException()
+    {
+        // Arrange
+        var addressId = _fixture.Create<Guid>();
+
+        _mockAddressService
+            .GetAddressByIdAsync(addressId, Arg.Any<Guid>())
+            .ThrowsAsync(NotFoundException.For<Domain.Models.Address>(addressId));
+
+        // Act & Assert
+        await _controller.Awaiting(c => c.Get(addressId))
+            .Should().ThrowAsync<NotFoundException>()
+            .Where(ex => ex.EntityName == nameof(Address) && ex.EntityId.ToString() == addressId.ToString());
+    }
 }
