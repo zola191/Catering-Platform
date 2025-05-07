@@ -10,6 +10,11 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
         await dbContext.AddAsync(entity);
     }
 
+    public void Delete(Address address)
+    {
+        dbContext.Addresses.Remove(address);
+    }
+
     public void Update(Address address)
     {
         dbContext.Update(address);

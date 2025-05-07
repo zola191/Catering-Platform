@@ -66,4 +66,12 @@ public class AddressesController : ControllerBase
         var result = await _addressService.UpdateAddressAsync(addressId, request, tenantId);
         return Ok(result);
     }
+
+    [HttpDelete("{addressId:guid}")]
+    public async Task<ActionResult> Delete([FromRoute] Guid addressId)
+    {
+        var tenantId = Guid.Parse("0196763c-9106-7806-a03f-960a1dad80e7");
+        await _addressService.DeleteAddressAsync(addressId, tenantId);
+        return NoContent();
+    }
 }

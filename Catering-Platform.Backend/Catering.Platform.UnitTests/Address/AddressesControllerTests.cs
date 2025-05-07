@@ -3,7 +3,6 @@ using Catering.Platform.API.Controllers;
 using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Exceptions;
-using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Requests.Adress;
 using FluentAssertions;
 using FluentValidation;
@@ -11,7 +10,6 @@ using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
@@ -259,5 +257,40 @@ public class AddressesControllerTests
         var errors = Assert.IsType<List<ValidationFailure>>(badRequestResult.Value);
         Assert.Single(errors);
         Assert.Equal("Country", errors[0].PropertyName);
+    }
+
+    [Fact]
+    public async Task Delete_ExistingAddress_ReturnsNoContent()
+    {
+        // Arrange
+        var addressId = _fixture.Create<Guid>();
+
+        _mockAddressService
+            .DeleteAddressAsync(addressId, Arg.Any<Guid>())
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.Delete(addressId);
+
+        // Assert
+        result.Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task Delete_NonExistingAddress_ReturnsNotFound()
+    {
+        // Arrange
+        var addressId = _fixture.Create<Guid>();
+        var tenantId = Guid.Parse("0196763c-9106-7806-a03f-960a1dad80e7");
+
+        _mockAddressService
+            .DeleteAddressAsync(addressId, tenantId)
+            .ThrowsAsync(NotFoundException.For<Domain.Models.Address>(addressId));
+
+        // Act & Assert
+        await _controller.Awaiting(c => c.Delete(addressId))
+            .Should().ThrowAsync<NotFoundException>()
+            .Where(ex => ex.EntityName == nameof(Domain.Models.Address) &&
+                         ex.EntityId.ToString() == addressId.ToString());
     }
 }

@@ -205,4 +205,53 @@ public class AddressServiceTests
         Assert.Contains("Address", exception.Message);
         Assert.Equal(addressId, exception.EntityId);
     }
+
+    [Fact]
+    public async Task DeleteAddressAsync_ExistingAddress_DeletesSuccessfully()
+    {
+        // Arrange
+        var tenantId = _fixture.Create<Guid>();
+        var addressId = _fixture.Create<Guid>();
+
+        var tenant = new Domain.Models.Tenant
+        {
+            Id = tenantId,
+            IsActive = true,
+            Addresses = new List<Domain.Models.Address>
+        {
+            new() { Id = addressId }
+        }
+        };
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(Task.FromResult(tenant));
+
+        // Act
+        await _service.DeleteAddressAsync(addressId, tenantId);
+
+        // Assert
+        _addressRepo.Received(1).Delete(Arg.Is<Domain.Models.Address>(a => a.Id == addressId));
+        _unitOfWork.Received(1).SaveChanges();
+    }
+
+    [Fact]
+    public async Task DeleteAddressAsync_AddressNotFound_ThrowsNotFoundException()
+    {
+        // Arrange
+        var tenantId = _fixture.Create<Guid>();
+        var addressId = _fixture.Create<Guid>();
+
+        var tenant = new Domain.Models.Tenant
+        {
+            Id = tenantId,
+            IsActive = true,
+            Addresses = new List<Domain.Models.Address>()
+        };
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(Task.FromResult(tenant));
+
+        // Act & Assert
+        await _service.Invoking(s => s.DeleteAddressAsync(addressId, tenantId))
+            .Should().ThrowAsync<NotFoundException>()
+            .Where(ex => ex.EntityName == nameof(Address) && ex.EntityId.ToString() == addressId.ToString());
+    }
 }
