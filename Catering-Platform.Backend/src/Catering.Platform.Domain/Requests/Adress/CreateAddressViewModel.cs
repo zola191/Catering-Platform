@@ -22,6 +22,7 @@ public record CreateAddressViewModel
             Region = request.Region,
             Comment = request.Comment,
             Description = request.Description,
+            CreatedAt = DateTime.UtcNow,
         };
     }
 }

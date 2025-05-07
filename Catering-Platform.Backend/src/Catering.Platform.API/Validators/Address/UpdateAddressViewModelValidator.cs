@@ -4,13 +4,13 @@ using FluentValidation;
 
 namespace Catering.Platform.API.Validators.Address;
 
-public abstract class UpdateAddressViewModelValidator : AbstractValidator<UpdateAddressViewModel>
+public class UpdateAddressViewModelValidator : AbstractValidator<UpdateAddressViewModel>
 {
-    protected UpdateAddressViewModelValidator()
+    public UpdateAddressViewModelValidator()
     {
         RuleFor(f => f.Country)
-                    .NotEmpty().WithMessage("Country is required")
-                    .MaximumLength(Constants.MAX_TEXT_LENGTH_64).WithMessage($"Country must not exceed {Constants.MAX_TEXT_LENGTH_64} characters");
+            .NotEmpty().WithMessage("Country is required")
+            .MaximumLength(Constants.MAX_TEXT_LENGTH_64).WithMessage($"Country must not exceed {Constants.MAX_TEXT_LENGTH_64} characters");
 
         RuleFor(f => f.StreetAndBuilding)
             .NotEmpty().WithMessage("Street and Building is required")
