@@ -6,5 +6,6 @@ namespace Catering.Platform.Domain.Repositories
     {
         Task<Tenant> BlockAsync(Tenant tenant, string blockReason);
         Task<Tenant> UnBlockAsync(Tenant tenant);
+        Task<Tenant?> GetByIdWithAddresses(Guid tenantId);
     }
 }

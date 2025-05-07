@@ -1,12 +1,11 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoNSubstitute;
-using Castle.Core.Logging;
 using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Services;
 using Catering.Platform.Domain.Exceptions;
-using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Tenant;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -30,6 +29,14 @@ namespace Catering.Platform.UnitTests.Tenant
             _fixture = new Fixture();
             //Настройка AutoFixture для работы с NSubstitute.
             _fixture.Customize(new AutoNSubstituteCustomization());
+
+            // Удаляем стандартное поведение (которое кидает исключение при рекурсии)
+            _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
+                .ForEach(b => _fixture.Behaviors.Remove(b));
+
+            // Добавляем поведение, которое пропускает рекурсивные зависимости
+            _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+
             _mockLogger = Substitute.For<ILogger<TenantService>>();
             _mockRepository = Substitute.For<ITenantRepository>();
             _mockCache = Substitute.For<IDistributedCache>();
@@ -253,19 +260,25 @@ namespace Catering.Platform.UnitTests.Tenant
             var request = _fixture.Create<BlockTenantRequest>();
             var tenant = _fixture.Build<Domain.Models.Tenant>()
                 .With(t => t.Id, tenantId)
-                .With(t => t.IsActive, true)
+                .With(t => t.IsActive, false)
                 .Create();
 
-            _mockRepository.BlockAsync(tenantId, request.Reason)
+            _mockRepository.GetByIdAsync(tenantId)
+                .Returns(Task.FromResult(tenant));
+
+            _mockRepository.BlockAsync(tenant, request.Reason)
                 .Returns(tenant);
 
             // Act
             var result = await _tenantService.BlockTenantAsync(tenantId, request);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(tenant.Id, result.Id);
-            Assert.True(result.IsActive);
+            result.Should().NotBeNull();
+            result.Id.Should().Be(tenantId);
+            result.IsActive.Should().BeFalse(); 
+
+            await _mockRepository.Received(1).GetByIdAsync(tenantId);
+            await _mockRepository.Received(1).BlockAsync(tenant, request.Reason);
         }
 
         [Fact]
@@ -274,8 +287,12 @@ namespace Catering.Platform.UnitTests.Tenant
             // Arrange
             var tenantId = Guid.NewGuid();
             var request = _fixture.Create<BlockTenantRequest>();
+            var tenant = _fixture.Build<Domain.Models.Tenant>()
+                                .With(t => t.Id, tenantId)
+                                .With(t => t.IsActive, true)
+                                .Create();
 
-            _mockRepository.BlockAsync(tenantId, request.Reason)
+            _mockRepository.BlockAsync(tenant, request.Reason)
                 .Throws(new TenantNotFoundException());
 
             // Act & Assert
@@ -286,16 +303,30 @@ namespace Catering.Platform.UnitTests.Tenant
         [Fact]
         public async Task BlockTenantAsync_RepositoryError_ThrowsException()
         {
-            // Arrange
             var tenantId = Guid.NewGuid();
             var request = _fixture.Create<BlockTenantRequest>();
 
-            _mockRepository.BlockAsync(tenantId, request.Reason)
-                .Throws(new Exception("Database error"));
+            var tenant = _fixture.Build<Domain.Models.Tenant>()
+                    .With(t => t.Id, tenantId)
+                    .With(t => t.IsActive, false)
+                    .Create();
+
+            _mockRepository.GetByIdAsync(tenantId)
+                .Returns(Task.FromResult(tenant));
+
+            _mockRepository.BlockAsync(tenant, request.Reason)
+                .ThrowsAsync(new Exception("Database error"));
 
             // Act & Assert
-            await Assert.ThrowsAsync<Exception>(
+            var exception = await Assert.ThrowsAsync<Exception>(
                 () => _tenantService.BlockTenantAsync(tenantId, request));
+
+            Assert.Contains("Database error", exception.Message);
+            await _mockRepository.Received(1).GetByIdAsync(tenantId);
+            await _mockRepository.Received(1).BlockAsync(
+                Arg.Is<Domain.Models.Tenant>(t => t.Id == tenantId && !t.IsActive),
+                request.Reason
+            );
         }
 
         [Fact]
@@ -308,22 +339,27 @@ namespace Catering.Platform.UnitTests.Tenant
                 .With(t => t.IsActive, false)
                 .Create();
 
-            _mockRepository.UnBlockAsync(tenantId)
+            _mockRepository.GetByIdAsync(tenantId)
+                .Returns(Task.FromResult(tenant));
+
+            _mockRepository.UnBlockAsync(tenant)
                 .Returns(Task.FromResult(tenant))
                 .AndDoes(x =>
                 {
                     tenant.IsActive = true;
                     tenant.BlockReason = string.Empty;
-                    tenant.UpdatedAt = DateTime.UtcNow;
                 });
 
             // Act
             var result = await _tenantService.UnblockTenantAsync(tenantId);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(tenantId, result.Id);
-            Assert.True(result.IsActive);
+            result.Should().NotBeNull();
+            result.Id.Should().Be(tenantId);
+            result.IsActive.Should().BeTrue();
+
+            await _mockRepository.Received(1).GetByIdAsync(tenantId);
+            await _mockRepository.Received(1).UnBlockAsync(tenant);
         }
 
         [Fact]
@@ -331,8 +367,13 @@ namespace Catering.Platform.UnitTests.Tenant
         {
             // Arrange
             var tenantId = Guid.NewGuid();
+            var tenant = _fixture.Build<Domain.Models.Tenant>()
+                                .With(t => t.Id, tenantId)
+                                .With(t => t.IsActive, false)
+                                .Create();
 
-            _mockRepository.UnBlockAsync(tenantId)
+
+            _mockRepository.UnBlockAsync(tenant)
                 .Throws(new TenantNotFoundException());
 
             // Act & Assert
@@ -345,13 +386,25 @@ namespace Catering.Platform.UnitTests.Tenant
         {
             // Arrange
             var tenantId = Guid.NewGuid();
+            var tenant = _fixture.Build<Domain.Models.Tenant>()
+                .With(t => t.Id, tenantId)
+                .With(t => t.IsActive, false)
+                .Create();
 
-            _mockRepository.UnBlockAsync(tenantId)
-                .Throws(new Exception("Database error"));
+            _mockRepository.GetByIdAsync(tenantId)
+                .Returns(Task.FromResult(tenant));
+
+            _mockRepository.UnBlockAsync(tenant)
+                .ThrowsAsync(new Exception("Database error"));
 
             // Act & Assert
-            await Assert.ThrowsAsync<Exception>(
+            var exception = await Assert.ThrowsAsync<Exception>(
                 () => _tenantService.UnblockTenantAsync(tenantId));
+
+            exception.Message.Should().Contain("Database error");
+
+            await _mockRepository.Received(1).GetByIdAsync(tenantId);
+            await _mockRepository.Received(1).UnBlockAsync(tenant);
         }
     }
 }
