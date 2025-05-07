@@ -48,6 +48,7 @@ public class AddressesController : ControllerBase
             new Uri($"/api/addresses/{addressViewModel.Id}", UriKind.Relative),
             addressViewModel);
     }
+
     [HttpPut("{addressId:guid}")]
     public async Task<ActionResult> Update(
     [FromRoute] Guid addressId, 
@@ -62,7 +63,7 @@ public class AddressesController : ControllerBase
             return BadRequest(validationResult.Errors);
         }
         var tenantId = Guid.Parse("0196763c-9106-7806-a03f-960a1dad80e7");
-        await _addressService.UpdateAddressAsync(addressId, request, tenantId);
-        return Ok(request);
+        var result = await _addressService.UpdateAddressAsync(addressId, request, tenantId);
+        return Ok(result);
     }
 }
