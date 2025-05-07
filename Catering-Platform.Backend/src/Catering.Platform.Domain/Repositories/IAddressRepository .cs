@@ -5,5 +5,6 @@ namespace Catering.Platform.Domain.Repositories
     public interface IAddressRepository
     {
         Task AddAsync(Address address);
+        void Update(Address address);
     }
 }

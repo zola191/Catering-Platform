@@ -1,5 +1,7 @@
 ﻿using Catering.Platform.Applications.Abstractions;
+using Catering.Platform.Applications.Services;
 using Catering.Platform.Applications.ViewModels;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Requests.Adress;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -41,5 +43,13 @@ public class AddressesController : ControllerBase
         return Created(
             new Uri($"/api/addresses/{addressViewModel.Id}", UriKind.Relative),
             addressViewModel);
+    }
+    // GET /api/addresses/{addressId}
+    [HttpGet("{addressId:guid}")]
+    public async Task<ActionResult> GetById([FromRoute] Guid addressId, [FromBody] UpdateAddressViewModel viewModel)
+    {
+        var tenantId = Guid.Parse("0196763c-9106-7806-a03f-960a1dad80e7");
+        await _addressService.UpdateAddressAsync(addressId, viewModel, tenantId);
+        return Ok(viewModel);
     }
 }

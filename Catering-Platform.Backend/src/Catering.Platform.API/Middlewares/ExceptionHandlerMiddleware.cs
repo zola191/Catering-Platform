@@ -25,6 +25,13 @@ namespace Catering.Platform.API.Middlewares
                         Extensions = { ["errors"] = ve.Errors }
                     },
 
+                    NotFoundException nfe => new ProblemDetails
+                    {
+                        Status = 404,
+                        Title = $"{nfe.EntityName} not found",
+                        Detail = nfe.Message
+                    },
+
                     TenantNotFoundException tnfe => new ProblemDetails
                     {
                         Status = 404,

@@ -7,6 +7,11 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
 {
     public async Task AddAsync(Address entity)
     {
-        var result = await dbContext.AddAsync(entity);
+        await dbContext.AddAsync(entity);
+    }
+
+    public void Update(Address address)
+    {
+        dbContext.Update(address);
     }
 }
