@@ -12,6 +12,7 @@ using Catering.Platform.Domain.Exceptions;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.AspNetCore.Http;
 using Catering.Platform.Domain.Shared;
+using Catering.Platform.API.Validators.Tenants;
 
 namespace Catering.Platform.UnitTests
 {
@@ -284,5 +285,70 @@ namespace Catering.Platform.UnitTests
             await _mockTenantService.Received(1).DeleteAsync(tenantId);
         }
 
+
+        [Fact]
+        public async Task Block_ValidRequest_ReturnsOk()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var request = new BlockTenantRequest { Reason = "Violation" };
+            var expectedResult = _fixture.Create<TenantViewModel>();
+
+            _mockTenantService.BlockTenantAsync(tenantId, request)
+                .Returns(expectedResult);
+
+            // Act
+            var result = await _controller.Block(tenantId, request, new BlockTenantRequestValidator());
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(expectedResult, okResult.Value);
+        }
+
+        [Fact]
+        public async Task Block_InvalidRequest_ReturnsBadRequest()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var request = new BlockTenantRequest { Reason = "" };
+            var validator = new BlockTenantRequestValidator();
+
+            // Act
+            var result = await _controller.Block(tenantId, request, validator);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.NotEmpty((IEnumerable<ValidationFailure>)badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Block_NonExistentTenant_ThrowsNotFoundException()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var request = new BlockTenantRequest { Reason = "Valid reason" };
+
+            _mockTenantService.BlockTenantAsync(tenantId, request)
+                .Throws(new TenantNotFoundException());
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<TenantNotFoundException>(
+                () => _controller.Block(tenantId, request, new BlockTenantRequestValidator()));
+        }
+
+        [Fact]
+        public async Task Block_AlreadyBlocked_ThrowsBadRequest()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var request = new BlockTenantRequest { Reason = "Valid reason" };
+
+            _mockTenantService.BlockTenantAsync(tenantId, request)
+                .Throws(new TenantAlreadyBlockException());
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<TenantAlreadyBlockException>(
+                () => _controller.Block(tenantId, request, new BlockTenantRequestValidator()));
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Exceptions;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Logging;
@@ -35,6 +36,20 @@ namespace Catering.Platform.Applications.Services
                     "Unable to save tenant {Name}. See Details: {Details}",
                     request.Name,
                     ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<TenantViewModel> BlockTenantAsync(Guid id, BlockTenantRequest request)
+        {
+            try
+            {
+                var result = await _repository.BlockAsync(id, request.Reason);
+                return TenantViewModel.MapToViewModel(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error blocking tenant {TenantId}", id);
                 throw;
             }
         }
@@ -129,5 +144,6 @@ namespace Catering.Platform.Applications.Services
                 throw;
             }
         }
+
     }
 }

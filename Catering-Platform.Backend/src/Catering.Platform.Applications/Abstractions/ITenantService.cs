@@ -10,5 +10,6 @@ namespace Catering.Platform.Applications.Abstractions
         Task<Guid> AddAsync(CreateTenantRequest request);
         Task<Guid> UpdateAsync(Guid id, UpdateTenantRequest request);
         Task DeleteAsync(Guid id);
+        Task<TenantViewModel> BlockTenantAsync(Guid id, BlockTenantRequest request);
     }
 }
