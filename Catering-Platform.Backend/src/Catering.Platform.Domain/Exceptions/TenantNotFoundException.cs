@@ -1,6 +1,8 @@
-﻿namespace Catering.Platform.Domain.Exceptions;
+﻿using Catering.Platform.Domain.Shared;
+
+namespace Catering.Platform.Domain.Exceptions;
 
 public class TenantNotFoundException : Exception
 {
-    public TenantNotFoundException() : base("Tenant does not exist.") { }
+    public TenantNotFoundException() : base(ErrorMessages.TenantNotFound) { }
 }

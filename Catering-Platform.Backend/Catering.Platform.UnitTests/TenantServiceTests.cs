@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using AutoFixture.AutoNSubstitute;
+using Castle.Core.Logging;
 using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Services;
 using Catering.Platform.Domain.Exceptions;
@@ -14,8 +15,10 @@ namespace Catering.Platform.UnitTests
 {
     public class TenantServiceTests
     {
+        //TODO FluentAssertions попрактиковаться
+
         private readonly ITenantRepository _mockRepository;
-        private readonly ITenantService _mockTenantService;
+        private readonly ITenantService _tenantService;
         private readonly IUnitOfWork _mockUnitOfWork;
         private readonly ILogger<ITenantService> _mockLogger;
         private readonly Fixture _fixture;
@@ -28,7 +31,7 @@ namespace Catering.Platform.UnitTests
             _mockLogger = Substitute.For<ILogger<TenantService>>();
             _mockRepository = Substitute.For<ITenantRepository>();
             _mockUnitOfWork = Substitute.For<IUnitOfWork>();
-            _mockTenantService = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
+            _tenantService = new TenantService(_mockRepository, _mockUnitOfWork, _mockLogger);
         }
 
         [Fact]
@@ -39,7 +42,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetAllAsync().Returns(Task.FromResult(tenants));
 
             // Act
-            var result = await _mockTenantService.GetAllAsync();
+            var result = await _tenantService.GetAllAsync();
 
             // Assert
             Assert.NotNull(result);
@@ -62,7 +65,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetAllAsync().Returns(Task.FromResult<List<Tenant>>(new List<Tenant>()));
 
             // Act
-            var result = await _mockTenantService.GetAllAsync();
+            var result = await _tenantService.GetAllAsync();
 
             // Assert
             Assert.NotNull(result);
@@ -78,7 +81,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult(tenant));
 
             // Act
-            var result = await _mockTenantService.GetByIdAsync(tenantId);
+            var result = await _tenantService.GetByIdAsync(tenantId);
 
             // Assert
             Assert.NotNull(result);
@@ -97,7 +100,7 @@ namespace Catering.Platform.UnitTests
             _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult<Tenant>(null));
 
             // Act
-            var result = await _mockTenantService.GetByIdAsync(tenantId);
+            var result = await _tenantService.GetByIdAsync(tenantId);
 
             // Assert
             Assert.Null(result);
@@ -203,6 +206,40 @@ namespace Catering.Platform.UnitTests
                 () => service.UpdateAsync(id, request));
 
             Assert.Contains("Database error", exception.Message);
+        }
+        [Fact]
+        public async Task DeleteAsync_ExistingTenant_DeletesSuccessfully()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var existingTenant = _fixture.Create<Tenant>();
+
+            _mockRepository.GetByIdAsync(tenantId).Returns(Task.FromResult(existingTenant));
+            _mockUnitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
+                         .Returns(Task.FromResult(1));
+
+            // Act
+            await _tenantService.DeleteAsync(tenantId);
+
+            // Assert
+            _mockRepository.Received(1).Delete(existingTenant);
+            await _mockUnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task DeleteAsync_NonExistentTenant_ThrowsAndLogs()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            _mockRepository.GetByIdAsync(tenantId).Returns((Tenant?)null);
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<TenantNotFoundException>(
+                () => _tenantService.DeleteAsync(tenantId));
+            
+            // Assert
+            _mockRepository.DidNotReceiveWithAnyArgs().Delete(Arg.Any<Tenant>());
+            await _mockUnitOfWork.DidNotReceive().SaveChangesAsync();
         }
     }
 }
