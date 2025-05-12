@@ -53,13 +53,6 @@ namespace Catering.Platform.Applications.Services
                 await _unitOfWork.SaveChangesAsync();
             }
 
-            catch (TenantNotFoundException ex)
-            {
-                _logger.LogError(
-                "Tenant is not found {Id}. See Details: {Details}", id, ex.Message);
-                throw;
-            }
-
             catch (Exception ex)
             {
                 _logger.LogError(
