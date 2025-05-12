@@ -31,7 +31,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRouting();
+
 app.UseMiddleware<ExceptionHandlerMiddleware>();
+app.UseMiddleware<ETagMiddleware>();
 
 app.UseAuthorization();
 
