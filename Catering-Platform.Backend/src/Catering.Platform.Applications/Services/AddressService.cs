@@ -46,16 +46,6 @@ public class AddressService : IAddressService
             var result = AddressViewModel.MapToViewModel(entity);
             return result;
         }
-        catch (TenantNotFoundException ex)
-        {
-            _logger.LogWarning("Tenant not found. TenantId: {TenantId}", tenantId);
-            throw;
-        }
-        catch (TenantInactiveException ex)
-        {
-            _logger.LogWarning("Attempt to use inactive tenant. TenantId: {TenantId}", tenantId);
-            throw;
-        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error creating address. TenantId: {TenantId}", tenantId);
