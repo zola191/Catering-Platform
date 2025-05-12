@@ -3,6 +3,6 @@
 public class Constants
 {
     public static readonly int MAX_TEXT_LENGTH_200 = 200;
-    public static readonly int MAX_TEXT_LENGTH_200_256 = 256;
-    public static readonly int MAX_TEXT_LENGTH_200_2000 = 2000;
+    public static readonly int MAX_TEXT_LENGTH_256 = 256;
+    public static readonly int MAX_TEXT_LENGTH_2000 = 2000;
 }

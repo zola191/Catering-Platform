@@ -1,6 +1,7 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Repositories;
+using Catering.Platform.Domain.Requests;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services
@@ -8,12 +9,33 @@ namespace Catering.Platform.Applications.Services
     public class TenantService : ITenantService
     {
         private readonly ITenantRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ITenantService> _logger;
 
-        public TenantService(ITenantRepository repository, ILogger<ITenantService> logger)
+        public TenantService(ITenantRepository repository, IUnitOfWork unitOfWork, ILogger<ITenantService> logger)
         {
             _repository = repository;
+            _unitOfWork = unitOfWork;
             _logger = logger;
+        }
+
+        public async Task<Guid> AddAsync(CreateTenantRequest request, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var tenant = CreateTenantRequest.MapToDomain(request);
+                var result = await _repository.AddAsync(tenant, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    "Unable to save tenant {Name}. See Details: {Details}",
+                    request.Name,
+                    ex.Message);
+                throw;
+            }
         }
 
         public async Task<IEnumerable<TenantViewModel>> GetAllAsync()

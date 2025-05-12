@@ -14,19 +14,19 @@ public record CreateDishRequest
     public List<string> Allergens { get; set; }
     public string PortionSize { get; set; }
 
-    public static Dish MapToDomain(CreateDishRequest dish)
+    public static Dish MapToDomain(CreateDishRequest request)
     {
         return new Dish()
         {
-            Name = dish.Name,
-            Description = dish.Description,
-            Price = dish.Price,
-            CategoryId = dish.CategoryId,
-            ImageUrl = dish.ImageUrl,
-            IsAvailable = dish.IsAvailable,
-            Ingredients = new IngredientList(dish.Ingredients),
-            Allergens = new AllergenList(dish.Allergens),
-            PortionSize = dish.PortionSize
+            Name = request.Name,
+            Description = request.Description,
+            Price = request.Price,
+            CategoryId = request.CategoryId,
+            ImageUrl = request.ImageUrl,
+            IsAvailable = request.IsAvailable,
+            Ingredients = new IngredientList(request.Ingredients),
+            Allergens = new AllergenList(request.Allergens),
+            PortionSize = request.PortionSize
         };
     }
 }
