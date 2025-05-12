@@ -350,5 +350,51 @@ namespace Catering.Platform.UnitTests
             var ex = await Assert.ThrowsAsync<TenantAlreadyBlockException>(
                 () => _controller.Block(tenantId, request, new BlockTenantRequestValidator()));
         }
+
+        [Fact]
+        public async Task UnBlock_ValidRequest_ReturnsOk()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var expectedResult = _fixture.Create<TenantViewModel>();
+
+            _mockTenantService.UnblockTenantAsync(tenantId)
+                .Returns(expectedResult);
+
+            // Act
+            var result = await _controller.UnBlock(tenantId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(expectedResult, okResult.Value);
+        }
+
+        [Fact]
+        public async Task UnBlock_NonExistentTenant_ThrowsNotFoundException()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+
+            _mockTenantService.UnblockTenantAsync(tenantId)
+                .Throws(new TenantNotFoundException());
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<TenantNotFoundException>(
+                () => _controller.UnBlock(tenantId));
+        }
+
+        [Fact]
+        public async Task UnBlock_TenantWithActiveData_ReturnsBadRequest()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+
+            _mockTenantService.UnblockTenantAsync(tenantId)
+                .Throws(new TenantHasActiveDataException());
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<TenantHasActiveDataException>(
+                () => _controller.UnBlock(tenantId));
+        }
     }
 }
