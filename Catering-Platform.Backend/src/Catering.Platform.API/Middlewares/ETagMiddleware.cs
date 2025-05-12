@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
 
 public class ETagMiddleware
 {
@@ -20,43 +19,40 @@ public class ETagMiddleware
             try
             {
                 context.Response.Body = memoryStream;
-
                 await _next(context);
 
-                if (context.Response.StatusCode == StatusCodes.Status200OK && context.Response.Body.Length > 0)
+                if (!ShouldProcessResponse(context))
                 {
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-                    var responseBody = await new StreamReader(memoryStream).ReadToEndAsync();
-                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    memoryStream.Position = 0;
+                    await memoryStream.CopyToAsync(originalBody);
+                    return;
+                }
 
-                    var eTag = GenerateETag(responseBody);
+                var bodyBytes = memoryStream.ToArray();
 
-                    if (context.Request.Headers.ContainsKey("If-None-Match"))
+                if (context.Request.Headers.TryGetValue("If-None-Match", out var clientETag))
+                {
+                    var eTag = GenerateETag(bodyBytes);
+
+                    if (string.Equals(clientETag, eTag, StringComparison.OrdinalIgnoreCase))
                     {
-                        var clientETag = context.Request.Headers["If-None-Match"].ToString();
-
-                        if (clientETag == eTag)
-                        {
-                            context.Response.StatusCode = StatusCodes.Status304NotModified;
-                            context.Response.Body = originalBody;
-                            return;
-                        }
+                        context.Response.StatusCode = StatusCodes.Status304NotModified;
+                        context.Response.ContentLength = 0;
+                        context.Response.Body = originalBody;
+                        return;
                     }
-
-                    context.Response.Headers.Append("ETag", eTag);
-
-                    await memoryStream.CopyToAsync(originalBody);
                 }
-                else
-                {
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-                    await memoryStream.CopyToAsync(originalBody);
-                }
+
+                var finalETag = GenerateETag(bodyBytes);
+                context.Response.Headers.Append("ETag", finalETag);
+
+                memoryStream.Position = 0;
+                await memoryStream.CopyToAsync(originalBody);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error in ETagMiddleware:");
-                memoryStream.Seek(0, SeekOrigin.Begin);
+                _logger.LogWarning(ex, "Error in ETagMiddleware");
+                memoryStream.Position = 0;
                 await memoryStream.CopyToAsync(originalBody);
             }
             finally
@@ -66,12 +62,30 @@ public class ETagMiddleware
         }
     }
 
-    private string GenerateETag(string content)
+    private string GenerateETag(byte[] content)
     {
         using (var md5 = MD5.Create())
         {
-            var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(content));
-            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            var hash = md5.ComputeHash(content);
+            return '"' + BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant() + '"';
         }
+    }
+
+    private static bool ShouldProcessResponse(HttpContext context)
+    {
+        if (context.Response.StatusCode != StatusCodes.Status200OK)
+            return false;
+
+        if (context.Response.Body?.Length <= 0)
+            return false;
+
+        if (!context.Response.Headers.TryGetValue("Content-Type", out var contentTypeValues))
+            return false;
+
+        var contentType = contentTypeValues.FirstOrDefault();
+        if (string.IsNullOrEmpty(contentType))
+            return false;
+
+        return true;
     }
 }
