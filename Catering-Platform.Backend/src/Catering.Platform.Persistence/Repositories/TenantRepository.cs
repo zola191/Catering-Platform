@@ -14,7 +14,7 @@ namespace Catering.Platform.Persistence.Repositories
 
         public async Task<Tenant> BlockAsync(Guid id, string blockReason)
         {
-            var tenant = await DbContext.Set<Tenant>().FirstOrDefaultAsync(x => x.Id.Equals(id));
+            var tenant = await DbContext.Set<Tenant>().FindAsync(id);
 
             if (tenant == null)
                 throw new TenantNotFoundException();

@@ -47,11 +47,6 @@ namespace Catering.Platform.Applications.Services
                 var result = await _repository.BlockAsync(id, request.Reason);
                 return TenantViewModel.MapToViewModel(result);
             }
-            catch (TenantNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Attempt to block non-existent tenant: {TenantId}", id);
-                throw;
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error blocking tenant {TenantId}", id);

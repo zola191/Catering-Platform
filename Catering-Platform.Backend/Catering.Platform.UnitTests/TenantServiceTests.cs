@@ -250,7 +250,7 @@ namespace Catering.Platform.UnitTests
             var request = _fixture.Create<BlockTenantRequest>();
             var tenant = _fixture.Build<Tenant>()
                 .With(t => t.Id, tenantId)
-                .With(t => t.IsActive, true)
+                .With(t => t.IsActive, false)
                 .Create();
 
             _mockRepository.BlockAsync(tenantId, request.Reason)
@@ -262,7 +262,7 @@ namespace Catering.Platform.UnitTests
             // Assert
             Assert.NotNull(result);
             Assert.Equal(tenant.Id, result.Id);
-            Assert.True(result.IsActive);
+            Assert.False(result.IsActive);
         }
 
         [Fact]
