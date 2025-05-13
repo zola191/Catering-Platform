@@ -34,14 +34,29 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
             .Select(x => x.Address)
             .AsNoTracking();
 
-        if (tenantId == null)
+        var result = tenantId == null
+            ? await baseQuery.ToListAsync()
+            : await baseQuery.Where(a => a.TenantId == tenantId).ToListAsync();
+
+        if (!result.Any())
         {
-            return await baseQuery.ToListAsync();
+            baseQuery = dbContext.Addresses
+                .Where(f => f.SearchVector.Matches(EF.Functions.ToTsQuery("russian", query)))
+                .Select(f => new
+                {
+                    Address = f,
+                    Rank = f.SearchVector.Rank(EF.Functions.ToTsQuery("russian", query)),
+                })
+                .OrderByDescending(x => x.Rank)
+                .Select(x => x.Address)
+                .AsNoTracking();
+
+            result = tenantId == null
+                ? await baseQuery.ToListAsync()
+                : await baseQuery.Where(a => a.TenantId == tenantId).ToListAsync();
         }
 
-        return await baseQuery
-            .Where(a => a.TenantId == tenantId)
-            .ToListAsync();
+        return result;
     }
 
     public void Update(Address address)
