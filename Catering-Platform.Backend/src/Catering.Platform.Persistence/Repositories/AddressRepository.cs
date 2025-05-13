@@ -18,7 +18,32 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
 
     public async Task<Address?> GetByIdAsync(Guid addressId)
     {
-        return await dbContext.Addresses.FirstOrDefaultAsync(f=>f.Id == addressId);
+        return await dbContext.Addresses.FirstOrDefaultAsync(f => f.Id == addressId);
+    }
+
+    public async Task<IEnumerable<Address>> SearchByTextAsync(Guid? tenantId, string query)
+    {
+        var testSearchQuery = EF.Functions.PhraseToTsQuery("russian", query);
+
+        var baseQuery = dbContext.Addresses
+            .Where(f => f.SearchVector.Matches(testSearchQuery))
+            .Select(f => new
+            {
+                Address = f,
+                Rank = f.SearchVector.Rank(testSearchQuery),
+            })
+            .OrderByDescending(x => x.Rank)
+            .Select(x => x.Address)
+            .AsNoTracking();
+
+        if (tenantId == null)
+        {
+            return await baseQuery.ToListAsync();
+        }
+
+        return await baseQuery
+            .Where(a => a.TenantId == tenantId)
+            .ToListAsync();
     }
 
     public void Update(Address address)

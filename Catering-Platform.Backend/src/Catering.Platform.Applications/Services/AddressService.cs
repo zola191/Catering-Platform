@@ -4,9 +4,6 @@ using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Adress;
-using Catering.Platform.Domain.Requests.Tenant;
-using Catering.Platform.Persistence.Repositories;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -143,6 +140,36 @@ public class AddressService : IAddressService
         }
     }
 
+    public async Task<IEnumerable<AddressViewModel>> SearchAddressesByTextAsync(SearchByTextViewModel viewModel, Guid? tenantId)
+    {
+        //TODO добавить проверку, что tenantId является админом
+        try
+        {
+            if (string.IsNullOrWhiteSpace(viewModel.Query))
+            {
+                throw new ArgumentException("Поисковый запрос не может быть пустым.");
+            }
+
+            var sanitizedQuery = SanitizeTsQueryInput(viewModel.Query);
+
+            var textSearchQuery = PrepareTsQuery(sanitizedQuery);
+
+            if (string.IsNullOrWhiteSpace(textSearchQuery))
+            {
+                throw new ArgumentException("Не удалось обработать поисковый запрос после очистки.");
+            }
+
+            var addresses = await _addressRepository.SearchByTextAsync(tenantId, textSearchQuery);
+
+            return addresses.Select(AddressViewModel.MapToViewModel).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetching address. TenantId: {TenantId}", tenantId);
+            throw;
+        }
+    }
+
     public async Task<AddressViewModel> UpdateAddressAsync(Guid addressId, UpdateAddressViewModel request, Guid tenantId)
     {
         try
@@ -182,4 +209,20 @@ public class AddressService : IAddressService
             throw;
         }
     }
+
+    private static string SanitizeTsQueryInput(string input)
+    {
+        var invalidChars = new[] { '&', '|', '!', '(', ')', '\'' };
+        return new string(input.Where(c => !invalidChars.Contains(c)).ToArray());
+    }
+
+    private string PrepareTsQuery(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return "";
+
+        var words = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Join(" & ", words.Select(w => $"\"{w}\""));
+    }
+
 }
