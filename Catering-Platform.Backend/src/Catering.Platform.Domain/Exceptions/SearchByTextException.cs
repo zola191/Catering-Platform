@@ -1,6 +1,6 @@
 ﻿namespace Catering.Platform.Domain.Exceptions;
 
-public class SearchByTextException
+public class SearchByTextException : Exception
 {
-
+    public SearchByTextException(string message) : base(message) { }
 }

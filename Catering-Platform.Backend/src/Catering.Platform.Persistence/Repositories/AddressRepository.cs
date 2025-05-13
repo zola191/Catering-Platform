@@ -23,14 +23,12 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
 
     public async Task<IEnumerable<Address>> SearchByTextAsync(Guid? tenantId, string query)
     {
-        var testSearchQuery = EF.Functions.PhraseToTsQuery("russian", query);
-
         var baseQuery = dbContext.Addresses
-            .Where(f => f.SearchVector.Matches(testSearchQuery))
+            .Where(f => f.SearchVector.Matches(EF.Functions.PhraseToTsQuery("russian", query)))
             .Select(f => new
             {
                 Address = f,
-                Rank = f.SearchVector.Rank(testSearchQuery),
+                Rank = f.SearchVector.Rank(EF.Functions.PhraseToTsQuery("russian", query)),
             })
             .OrderByDescending(x => x.Rank)
             .Select(x => x.Address)

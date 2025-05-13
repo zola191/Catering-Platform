@@ -27,7 +27,10 @@ namespace Catering.Platform.Persistence.Configurations
 
             builder.HasIndex(f => f.TenantId);
 
-            builder.HasGeneratedTsVectorColumn(f => f.SearchVector, "russian", f => new { f.City, f.StreetAndBuilding })
+            builder.HasGeneratedTsVectorColumn(
+                    f => f.SearchVector, 
+                    "russian", 
+                    f => new { f.City, f.StreetAndBuilding })
                    .HasIndex(f => f.SearchVector)
                    .HasMethod("GIN");
         }

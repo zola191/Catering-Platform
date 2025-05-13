@@ -4,6 +4,7 @@ using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Adress;
+using Catering.Platform.Domain.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -147,7 +148,7 @@ public class AddressService : IAddressService
         {
             if (string.IsNullOrWhiteSpace(viewModel.Query))
             {
-                throw new ArgumentException("Поисковый запрос не может быть пустым.");
+                throw new SearchByTextException(ErrorMessages.SearchQueryEmpty);
             }
 
             var sanitizedQuery = SanitizeTsQueryInput(viewModel.Query);
@@ -156,10 +157,10 @@ public class AddressService : IAddressService
 
             if (string.IsNullOrWhiteSpace(textSearchQuery))
             {
-                throw new ArgumentException("Не удалось обработать поисковый запрос после очистки.");
+                throw new SearchByTextException(ErrorMessages.SearchQueryInvalidAfterSanitization);
             }
 
-            var addresses = await _addressRepository.SearchByTextAsync(tenantId, textSearchQuery);
+            var addresses = await _addressRepository.SearchByTextAsync(viewModel.Id, textSearchQuery);
 
             return addresses.Select(AddressViewModel.MapToViewModel).ToList();
         }

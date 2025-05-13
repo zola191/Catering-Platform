@@ -6,5 +6,4 @@ namespace Catering.Platform.Domain.Exceptions
     {
         public TenantInactiveException() : base(ErrorMessages.TenantInactive) { }
     }
-
 }
