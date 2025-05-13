@@ -9,7 +9,7 @@ public class DishConfiguration: IEntityTypeConfiguration<Dish>
 {
     public void Configure(EntityTypeBuilder<Dish> builder)
     {
-        builder.ToTable("dish");
+        builder.ToTable("Dish");
         
         builder.HasKey(f => f.Id);
         

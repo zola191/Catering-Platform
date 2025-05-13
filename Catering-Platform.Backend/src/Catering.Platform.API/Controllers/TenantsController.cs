@@ -51,7 +51,7 @@ namespace Catering.Platform.API.Controllers
         [FromBody] CreateTenantRequest request)
         {
             var validationResult = await _createTenantRequestValidator.ValidateAsync(request);
-            if (validationResult.IsValid==false)
+            if (validationResult.IsValid == false)
             {
                 _logger.LogInformation(
                 "Validation failed for CreateTenantRequest. Errors: {ValidationErrors}",
@@ -63,7 +63,7 @@ namespace Catering.Platform.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromRoute]Guid id, [FromBody] UpdateTenantRequest request)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateTenantRequest request)
         {
             var validationResult = await _updateTenantRequestValidator.ValidateAsync(request);
             if (validationResult.IsValid == false)
@@ -107,7 +107,7 @@ namespace Catering.Platform.API.Controllers
 
         [HttpPut("{id:guid}/block")]
         public async Task<ActionResult> Block(
-            [FromRoute] Guid id, 
+            [FromRoute] Guid id,
             [FromBody] BlockTenantRequest request,
             [FromServices] BlockTenantRequestValidator validator)
         {
