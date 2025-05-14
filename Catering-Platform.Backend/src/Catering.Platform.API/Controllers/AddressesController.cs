@@ -117,7 +117,7 @@ public class AddressesController : ControllerBase
             return BadRequest(validationResult.Errors);
         }
 
-        // временно заглушкой передал tenantId вторым параметров в SearchAddressesByTextAsync
+        // временно заглушкой передал tenantId вторым параметров в SearchByZip
         var result = await _addressService.SearchAddressesByZipAsync(request, tenantId);
         return Ok(result);
     }
