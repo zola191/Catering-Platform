@@ -1,10 +1,8 @@
-﻿using Catering.Platform.Applications.Abstractions;
-using Catering.Platform.Applications.Services;
+﻿using Catering.Platform.API.Validators.Address;
+using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
-using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Requests.Adress;
 using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Platform.API.Controllers;
@@ -95,6 +93,32 @@ public class AddressesController : ControllerBase
         };
         // временно заглушкой передал tenantId вторым параметров в SearchAddressesByTextAsync
         var result = await _addressService.SearchAddressesByTextAsync(request, tenantId);
+        return Ok(result);
+    }
+
+    [HttpGet("search-by-zip")]
+    public async Task<IActionResult> SearchByZip(
+    [FromServices] SearchByZipViewModelValidator zipValidator,
+    [FromQuery] Guid? tenantId,
+    [FromQuery] string zip)
+    {
+        var request = new SearchByZipViewModel
+        {
+            Id = tenantId,
+            Zip = zip
+        };
+
+        var validationResult = await zipValidator.ValidateAsync(request);
+        if (validationResult.IsValid == false)
+        {
+            _logger.LogInformation(
+            "Validation failed for SearchByZip. Errors: {ValidationErrors}",
+            validationResult.Errors);
+            return BadRequest(validationResult.Errors);
+        }
+
+        // временно заглушкой передал tenantId вторым параметров в SearchByZip
+        var result = await _addressService.SearchAddressesByZipAsync(request, tenantId);
         return Ok(result);
     }
 }

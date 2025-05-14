@@ -59,6 +59,19 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
         return result;
     }
 
+    public async Task<IEnumerable<Address>> SearchByZipAsync(Guid? tenantId, string zip)
+    {
+        IQueryable<Address> query = dbContext.Addresses;
+        if (tenantId.HasValue)
+        {
+            query = query.Where(a => a.TenantId == tenantId.Value);
+        }
+
+        query = query.Where(a => a.Zip == zip);
+
+        return await query.ToListAsync();
+    }
+
     public void Update(Address address)
     {
         dbContext.Update(address);

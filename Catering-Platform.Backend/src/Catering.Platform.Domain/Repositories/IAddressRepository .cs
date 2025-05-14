@@ -9,5 +9,6 @@ namespace Catering.Platform.Domain.Repositories
         void Delete(Address address);
         Task<Address?> GetByIdAsync(Guid addressId);
         Task<IEnumerable<Address>> SearchByTextAsync(Guid? tenantId, string query);
+        Task<IEnumerable<Address>> SearchByZipAsync(Guid? tenantId, string zip);
     }
 }

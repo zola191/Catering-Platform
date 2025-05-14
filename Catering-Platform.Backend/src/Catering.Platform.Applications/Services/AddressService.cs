@@ -211,6 +211,24 @@ public class AddressService : IAddressService
         }
     }
 
+    public async Task<IEnumerable<AddressViewModel>> SearchAddressesByZipAsync(SearchByZipViewModel request, Guid? requestingUserId)
+    {
+        //TODO Проверки прав доступа:
+        //пользователи могут искать только адреса своего арендатора (User.TenantId),
+        //администраторы — любые.
+        try
+        {
+            var addresses = await _addressRepository.SearchByZipAsync(request.Id, request.Zip);
+            return addresses.Select(AddressViewModel.MapToViewModel);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetch address. zip: {TenantId}", request.Zip);
+            throw;
+        }
+    }
+
     private static string SanitizeTsQueryInput(string input)
     {
         var invalidChars = new[] { '&', '|', '!', '(', ')', '\'' };
@@ -225,5 +243,4 @@ public class AddressService : IAddressService
         var words = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return string.Join(" & ", words.Select(w => $"\"{w}\""));
     }
-
 }
