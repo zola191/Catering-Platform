@@ -10,5 +10,6 @@ namespace Catering.Platform.Applications.Abstractions
         Task DeleteAddressAsync(Guid addressId, Guid tenantId);
         Task<AddressViewModel> GetAddressByIdAsync(Guid addressId, Guid tenantId);
         Task<IEnumerable<AddressViewModel>> SearchAddressesByTextAsync(SearchByTextViewModel viewModel, Guid? tenantId);
+        Task<IEnumerable<AddressViewModel>> SearchAddressesByZipAsync(SearchByZipViewModel request, Guid? requestingUserId);
     }
 }
