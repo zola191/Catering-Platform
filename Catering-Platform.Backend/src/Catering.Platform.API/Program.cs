@@ -6,10 +6,15 @@ using Catering.Platform.Persistence.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/catering-platfrom.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 // Add services to the container.
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -47,7 +52,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSerilog();
 builder.Services.AddWeb();
 builder.Services.AddApplication();
 builder.Services.AddPersistence(builder.Configuration);

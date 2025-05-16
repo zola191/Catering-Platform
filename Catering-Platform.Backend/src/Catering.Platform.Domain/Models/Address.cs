@@ -1,4 +1,6 @@
-﻿namespace Catering.Platform.Domain.Models
+﻿using NpgsqlTypes;
+
+namespace Catering.Platform.Domain.Models
 {
     public class Address : Entity
     {
@@ -13,5 +15,6 @@
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public Tenant Tenant { get; set; }
+        public NpgsqlTsVector SearchVector { get; set; }
     }
 }

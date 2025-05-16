@@ -26,6 +26,13 @@ namespace Catering.Platform.Persistence.Configurations
             builder.HasOne(f => f.Tenant).WithMany(f => f.Addresses).HasForeignKey(f => f.TenantId);
 
             builder.HasIndex(f => f.TenantId);
+
+            builder.HasGeneratedTsVectorColumn(
+                    f => f.SearchVector, 
+                    "russian", 
+                    f => new { f.City, f.StreetAndBuilding })
+                   .HasIndex(f => f.SearchVector)
+                   .HasMethod("GIN");
         }
     }
 }
