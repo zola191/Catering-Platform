@@ -13,6 +13,7 @@ public class CreateCustomerRequest
     public Guid? CompanyId { get; set; }
     public Guid? AddressId { get; set; }
     public int TaxNumber { get; set; }
+    public Guid TenantId { get; set; }
 
     public static Customer MapToDomain(CreateCustomerRequest request)
     {
@@ -23,10 +24,11 @@ public class CreateCustomerRequest
             MiddleName = request.MiddleName,
             Email = request.Email,
             Phone = request.Phone,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             CompanyId = request.CompanyId,
             AddressId = request.AddressId,
             TaxNumber = request.TaxNumber,
+            TenantId = request.TenantId,
         };
     }
 }

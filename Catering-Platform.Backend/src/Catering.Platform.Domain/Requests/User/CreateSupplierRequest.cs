@@ -12,7 +12,7 @@ public record CreateSupplierRequest
     public string Password { get; set; }
     public Guid CompanyId { get; set; }
     public string Position { get; set; }
-
+    public Guid TenantId { get; set; }
     public static Supplier MapToDomain(CreateSupplierRequest request)
     {
         return new Supplier()
@@ -22,9 +22,10 @@ public record CreateSupplierRequest
             MiddleName = request.MiddleName,
             Email = request.Email,
             Phone = request.Phone,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             CompanyId = request.CompanyId,
             Position = request.Position,
+            TenantId = request.TenantId,
         };
     }
 }

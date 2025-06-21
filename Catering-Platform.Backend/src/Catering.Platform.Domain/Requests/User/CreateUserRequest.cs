@@ -8,7 +8,7 @@ public record CreateUserRequest
     public string Email { get; set; }
     public string Phone { get; set; }
     public string Password { get; set; }
-
+    public Guid TenantId { get; set; }
     public static Models.User MapToDomain(CreateUserRequest request)
     {
         return new Models.User()
@@ -18,7 +18,8 @@ public record CreateUserRequest
             MiddleName = request.MiddleName,
             Email = request.Email,
             Phone = request.Phone,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
+            TenantId = request.TenantId,
         };
     }
 }

@@ -20,7 +20,7 @@ public class CreateBrokerRequest
             MiddleName = request.MiddleName,
             Email = request.Email,
             Phone = request.Phone,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             Role = (Role)request.RoleRequest,
         };
     }
