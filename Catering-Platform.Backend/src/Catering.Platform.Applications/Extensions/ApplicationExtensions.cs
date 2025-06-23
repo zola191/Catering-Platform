@@ -15,6 +15,8 @@ public static class ApplicationExtensions
         services.AddScoped<IDishService, DishService>();
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<IAddressService, AddressService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IHashService, HashService>();
         services.AddScoped<IJwtService, JwtService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));

@@ -16,5 +16,7 @@ namespace Catering.Platform.Domain.Models
         public DateTime? UpdatedAt { get; set; }
         public Tenant Tenant { get; set; }
         public NpgsqlTsVector SearchVector { get; set; }
+        public Guid? CustomerId { get; set; }
+        public Customer Customer { get; set; }
     }
 }

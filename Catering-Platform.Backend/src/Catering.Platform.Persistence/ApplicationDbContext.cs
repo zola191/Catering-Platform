@@ -10,6 +10,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Dish> Dishes { get; set; }
     public DbSet<Address> Addresses { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<User> Users { get; set; }
 
     public ApplicationDbContext(DbContextOptions options) : base(options)
     {
@@ -22,5 +23,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CategoryConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TenantConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AddressConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(SupplierConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CustomerConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(BrokerConfiguration).Assembly);
     }
 }
