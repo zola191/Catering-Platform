@@ -11,11 +11,31 @@
       - "5434:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
   redis:
     image: redis:latest
     container_name: redis
     ports:
         - "6379:6379"
     restart: unless-stopped
+
+  seq:
+    image: datalust/seq:2023.1
+    container_name: seq
+    ports:
+      - "5341:80"
+      - "5342:5341"
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
+    mem_limit: 4g
+    memswap_limit: 4g
+    depends_on:
+      - postgres
+      - redis
+
 volumes:
   postgres-data:
+  seq-data:
