@@ -8,4 +8,5 @@ public interface ICompanyRepository
     Task UpdateAsync(Company company);
     Task<Company?> GetByIdAsync(Guid id);
     Task<Company?> GetByTaxNumberAsync(string taxNumber);
+    Task<IEnumerable<Company>?> SearchByNameAsync(Guid? tenantId, string query);
 }
