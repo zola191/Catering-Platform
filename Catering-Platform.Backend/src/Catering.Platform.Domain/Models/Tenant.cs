@@ -9,4 +9,5 @@ public class Tenant : Entity
     public string? BlockReason { get; set; }
     public List<Address> Addresses { get; set; } = new List<Address>();
     public List<User> Users { get; set; } = new List<User>();
+    public List<Company> Companies { get; set; } = new List<Company>();
 }
