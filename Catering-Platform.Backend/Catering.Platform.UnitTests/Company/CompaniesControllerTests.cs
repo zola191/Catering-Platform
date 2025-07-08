@@ -128,7 +128,7 @@ public class CompaniesControllerTests
         var request = _fixture.Create<UpdateCompanyRequest>();
         var validationErrors = new List<ValidationFailure>
         {
-        new ValidationFailure("Name", "Name is required")
+            new ValidationFailure("Name", "Name is required")
         };
         var validationResult = new ValidationResult(validationErrors);
 
@@ -145,5 +145,5 @@ public class CompaniesControllerTests
         await _mockCompanyService.DidNotReceive().UpdateCompanyAsync(Arg.Any<UpdateCompanyRequest>(), Arg.Any<Guid>());
     }
 
-    
+
 }
