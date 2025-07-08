@@ -59,7 +59,7 @@ public class CompanyService : ICompanyService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error creating address. TenantId: {TenantId}", request.TenantId);
+            _logger.LogError(ex, "Unexpected error creating Company. TenantId: {TenantId}", request.TenantId);
             throw;
         }
     }
