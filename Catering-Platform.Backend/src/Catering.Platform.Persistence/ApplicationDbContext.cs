@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Address> Addresses { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<Company> Companies { get; set; }
 
     public ApplicationDbContext(DbContextOptions options) : base(options)
     {
