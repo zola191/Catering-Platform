@@ -65,6 +65,34 @@ public class CompaniesControllerTests
     }
 
     [Fact]
+    public async Task Create_ReturnsBadRequest_WhenValidationFails()
+    {
+        // Arrange
+        var request = _fixture.Create<CreateCompanyRequest>();
+
+        var validationErrors = new List<ValidationFailure>
+        {
+            new ValidationFailure("Name", "Name is required"),
+            new ValidationFailure("TaxNumber", "TaxNumber is invalid")
+        };
+        var validationResult = new ValidationResult(validationErrors);
+
+        _mockCreateCompanyvalidator.ValidateAsync(request)
+            .Returns(Task.FromResult(validationResult));
+
+        // Act
+        var result = await _controller.Create(request);
+
+        // Assert
+        var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+
+        badRequestResult.Value.Should().BeEquivalentTo(validationResult.Errors);
+
+        await _mockCompanyService.DidNotReceive().CreateCompanyAsync(Arg.Any<CreateCompanyRequest>(), Arg.Any<Guid>());
+        await _mockCreateCompanyvalidator.Received(1).ValidateAsync(request);
+    }
+
+    [Fact]
     public async Task Update_ReturnsOk_WhenUpdateIsSuccessful()
     {
         // Arrange
@@ -116,4 +144,6 @@ public class CompaniesControllerTests
 
         await _mockCompanyService.DidNotReceive().UpdateCompanyAsync(Arg.Any<UpdateCompanyRequest>(), Arg.Any<Guid>());
     }
+
+    
 }
