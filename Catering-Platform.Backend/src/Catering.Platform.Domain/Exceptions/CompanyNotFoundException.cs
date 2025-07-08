@@ -6,15 +6,25 @@ namespace Catering.Platform.Domain.Exceptions;
 public class CompanyNotFoundException : NotFoundException
 {
     public string? TaxNumber { get; }
+    public string? Name { get; }
 
-    public CompanyNotFoundException(Guid id) : base(nameof(Company), id, ErrorMessages.CompanyNotFound)
+    private CompanyNotFoundException(Guid id) : base(nameof(Company), id, ErrorMessages.CompanyNotFound)
     {
         TaxNumber = null;
     }
 
-    public CompanyNotFoundException(string taxNumber)
-    : base(nameof(Company), null, $"{ErrorMessages.CompanyNotFound} (TaxNumber: {taxNumber})")
+    private CompanyNotFoundException(string taxNumber, string? name)
+        : base(nameof(Company), null,
+            name != null
+                ? $"{ErrorMessages.CompanyNotFound} (Name: {name})"
+                : $"{ErrorMessages.CompanyNotFound} (TaxNumber: {taxNumber})")
     {
         TaxNumber = taxNumber;
+        Name = name;
     }
+
+
+    public static CompanyNotFoundException ById(Guid id) => new(id);
+    public static CompanyNotFoundException ByTaxNumber(string taxNumber) => new(taxNumber, null);
+    public static CompanyNotFoundException ByName(string name) => new(null, name);
 }

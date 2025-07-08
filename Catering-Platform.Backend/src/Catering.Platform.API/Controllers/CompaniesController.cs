@@ -44,6 +44,14 @@ namespace Catering.Platform.API.Controllers
             return Ok(company);
         }
 
+        [HttpGet("search-by-name")]
+        public async Task<IActionResult> SearchByName([FromQuery] SearchByNameRequest query)
+        {
+            var tenantId = Guid.NewGuid();
+            var companies = await _companyService.SearchCompaniesByNameAsync(query, tenantId);
+            return Ok(companies);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateCompanyRequest request)
         {
