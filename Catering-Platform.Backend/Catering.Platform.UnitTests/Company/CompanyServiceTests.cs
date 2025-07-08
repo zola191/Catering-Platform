@@ -213,4 +213,41 @@ public class CompanyServiceTests
             () => _service.GetCompanyByIdAsync(companyId, userId));
 
     }
+
+    [Fact]
+    public async Task GetCompanyByTaxNumberAsync_ReturnsCompany_WhenExists()
+    {
+        // Arrange
+        var taxNumber = "1234567890";
+        var userId = Guid.NewGuid();
+        var existingCompany = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.TaxNumber, taxNumber)
+            .Create();
+
+        _mockCompanyRepository.GetByTaxNumberAsync(taxNumber)
+            .Returns(existingCompany);
+
+        // Act
+        var result = await _service.GetCompanyByTaxNumberAsync(taxNumber, userId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.TaxNumber.Should().Be(taxNumber);
+        await _mockCompanyRepository.Received(1).GetByTaxNumberAsync(taxNumber);
+    }
+
+    [Fact]
+    public async Task GetCompanyByTaxNumberAsync_ThrowsNotFound_WhenCompanyNotExists()
+    {
+        // Arrange
+        var taxNumber = "1234567890";
+        var userId = Guid.NewGuid();
+
+        _mockCompanyRepository.GetByTaxNumberAsync(taxNumber)
+            .Returns((Domain.Models.Company)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<CompanyNotFoundException>(
+            () => _service.GetCompanyByTaxNumberAsync(taxNumber, userId));
+    }
 }

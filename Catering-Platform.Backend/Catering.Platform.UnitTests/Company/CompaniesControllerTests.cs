@@ -2,6 +2,7 @@
 using Catering.Platform.API.Controllers;
 using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels.Company;
+using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Requests.Company;
 using FluentAssertions;
 using FluentValidation;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Catering.Platform.UnitTests.Company;
 
@@ -161,5 +163,41 @@ public class CompaniesControllerTests
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().BeEquivalentTo(expectedCompany);
+    }
+
+    [Fact]
+    public async Task GetByTaxNumber_ReturnsCompany_WhenExists()
+    {
+        // Arrange
+        var taxNumber = "1234567890";
+        var expectedCompany = _fixture.Create<CompanyViewModel>();
+
+        _mockCompanyService.GetCompanyByTaxNumberAsync(taxNumber, Arg.Any<Guid>())
+            .Returns(expectedCompany);
+
+        // Act
+        var result = await _controller.GetByTaxNumber(taxNumber);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(expectedCompany);
+    }
+
+    [Fact]
+    public async Task GetByTaxNumber_ThrowsCompanyNotFoundException_WhenCompanyNotExists()
+    {
+        // Arrange
+        var taxNumber = "1234567890";
+        var expectedException = new CompanyNotFoundException(taxNumber);
+
+        _mockCompanyService.GetCompanyByTaxNumberAsync(taxNumber, Arg.Any<Guid>())
+            .Throws(expectedException);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<CompanyNotFoundException>(
+            () => _controller.GetByTaxNumber(taxNumber));
+
+        exception.Should().BeEquivalentTo(expectedException);
+        exception.Message.Should().Contain(taxNumber);
     }
 }

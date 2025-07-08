@@ -86,6 +86,29 @@ public class CompanyService : ICompanyService
         }
     }
 
+    public async Task<CompanyViewModel> GetCompanyByTaxNumberAsync(string taxNumber, Guid userId)
+    {
+        try
+        {
+            var existingCompany = await _companyRepository.GetByTaxNumberAsync(taxNumber);
+
+            if (existingCompany == null)
+                throw new CompanyNotFoundException(taxNumber);
+
+            return CompanyViewModel.MapToViewModel(existingCompany);
+        }
+        catch (CompanyNotFoundException ex)
+        {
+            _logger.LogError("Company by TaxNumber not found. TaxNumber: {TaxNumber}", taxNumber);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetch company by taxNumber. TaxNumber: {TaxNumber}", taxNumber);
+            throw;
+        }
+    }
+
     public async Task<CompanyViewModel> UpdateCompanyAsync(UpdateCompanyRequest request, Guid userId)
     {
         try

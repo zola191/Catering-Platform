@@ -1,5 +1,6 @@
 ﻿using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Catering.Platform.Persistence.Repositories;
 
@@ -21,6 +22,11 @@ public class CompanyRepository : ICompanyRepository
     public async Task<Company?> GetByIdAsync(Guid id)
     {
         return await _dbContext.Set<Company>().FindAsync(id);
+    }
+
+    public async Task<Company?> GetByTaxNumberAsync(string taxNumber)
+    {
+        return await _dbContext.Set<Company>().FirstOrDefaultAsync(c => c.TaxNumber == taxNumber);
     }
 
     public async Task UpdateAsync(Company company)
