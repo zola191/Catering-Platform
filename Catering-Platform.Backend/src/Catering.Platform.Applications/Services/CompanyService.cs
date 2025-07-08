@@ -71,7 +71,7 @@ public class CompanyService : ICompanyService
         {
             var existingCompany = await _companyRepository.GetByIdAsync(companyId);
             if (existingCompany == null)
-                throw new CompanyNotFoundException(companyId);
+                throw CompanyNotFoundException.ById(companyId);
             return CompanyViewModel.MapToViewModel(existingCompany);
         }
         catch (CompanyNotFoundException ex)
@@ -93,7 +93,7 @@ public class CompanyService : ICompanyService
             var existingCompany = await _companyRepository.GetByTaxNumberAsync(taxNumber);
 
             if (existingCompany == null)
-                throw new CompanyNotFoundException(taxNumber);
+                throw CompanyNotFoundException.ByTaxNumber(taxNumber);
 
             return CompanyViewModel.MapToViewModel(existingCompany);
         }
@@ -109,6 +109,40 @@ public class CompanyService : ICompanyService
         }
     }
 
+    public async Task<IEnumerable<CompanyViewModel>> SearchCompaniesByNameAsync(SearchByNameRequest request, Guid userId)
+    {
+        try
+        {
+            var existingTenant = await _tenantRepository.GetByIdAsync(userId);
+
+            if (existingTenant == null)
+                throw new TenantNotFoundException();
+
+            var existingCompanies = await _companyRepository.SearchByNameAsync(userId, request.Name);
+
+            if (existingCompanies == null)
+                throw CompanyNotFoundException.ByName(request.Name);
+
+            return existingCompanies.Select(CompanyViewModel.MapToViewModel);
+        }
+        catch (TenantNotFoundException ex)
+        {
+            _logger.LogError("Tenant not found. TenantId: {TenantId}", userId);
+            throw;
+        }
+
+        catch (CompanyNotFoundException ex)
+        {
+            _logger.LogError("Company not found by name Name: {Name}", request.Name);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetch company by name. CompanyName: {CompanyName}", request.Name);
+            throw;
+        }
+    }
+
     public async Task<CompanyViewModel> UpdateCompanyAsync(UpdateCompanyRequest request, Guid userId)
     {
         try
@@ -116,7 +150,7 @@ public class CompanyService : ICompanyService
             var existingCompany = await _companyRepository.GetByIdAsync(request.CompanyId);
 
             if (existingCompany == null)
-                throw new CompanyNotFoundException(request.CompanyId);
+                throw CompanyNotFoundException.ById(request.CompanyId);
 
             var existingAddress = await _addressRepository.GetByIdAsync(request.AddressId);
 
