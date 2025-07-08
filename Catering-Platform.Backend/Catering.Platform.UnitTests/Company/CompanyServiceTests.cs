@@ -106,4 +106,74 @@ public class CompanyServiceTests
 
         await _mockCompanyRepository.DidNotReceive().AddAsync(Arg.Any<Domain.Models.Company>());
     }
+
+    [Fact]
+    public async Task UpdateCompanyAsync_ReturnsUpdatedViewModel_WhenUpdateIsSuccessful()
+    {
+        // Arrange
+        var request = _fixture.Create<UpdateCompanyRequest>();
+        var userId = Guid.NewGuid();
+
+        var existingCompany = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, request.CompanyId)
+            .Create();
+
+        var existingAddress = _fixture.Build<Domain.Models.Address>()
+            .With(a => a.Id, request.AddressId)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(request.CompanyId).Returns(existingCompany);
+        _mockAddressRepository.GetByIdAsync(request.AddressId).Returns(existingAddress);
+        _mockCompanyRepository.UpdateAsync(Arg.Any<Domain.Models.Company>()).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.UpdateCompanyAsync(request, userId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(request.CompanyId);
+
+        await _mockCompanyRepository.Received(1).GetByIdAsync(request.CompanyId);
+        await _mockAddressRepository.Received(1).GetByIdAsync(request.AddressId);
+        await _mockCompanyRepository.Received(1).UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+    [Fact]
+    public async Task UpdateCompanyAsync_ThrowsCompanyNotFoundException_WhenCompanyNotFound()
+    {
+        // Arrange
+        var request = _fixture.Create<UpdateCompanyRequest>();
+        var userId = Guid.NewGuid();
+
+        _mockCompanyRepository.GetByIdAsync(request.CompanyId).Returns((Domain.Models.Company)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<CompanyNotFoundException>(
+            () => _service.UpdateCompanyAsync(request, userId));
+
+        await _mockAddressRepository.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+    [Fact]
+    public async Task UpdateCompanyAsync_ThrowsAddressNotFoundException_WhenAddressNotFound()
+    {
+        // Arrange
+        var request = _fixture.Create<UpdateCompanyRequest>();
+        var userId = Guid.NewGuid();
+        var existingCompany = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, request.CompanyId)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(request.CompanyId).Returns(existingCompany);
+        _mockAddressRepository.GetByIdAsync(request.AddressId).Returns((Domain.Models.Address)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<AddressNotFoundException>(
+            () => _service.UpdateCompanyAsync(request, userId));
+
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+
 }
