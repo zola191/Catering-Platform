@@ -36,8 +36,9 @@ public class AddressesController : ControllerBase
         var validationResult = await _createAdressViewModelValidator.ValidateAsync(request);
         if (validationResult.IsValid == false)
         {
-            _logger.LogInformation(
-            "Validation failed for CreateAddressViewModel. Errors: {ValidationErrors}",
+            _logger.LogWarning(
+            "Validation failed for CreateAddressViewModel. TenantId: {TenantId}, Errors: {@ValidationErrors}",
+            tenantId,
             validationResult.Errors);
             return BadRequest(validationResult.Errors);
         }
@@ -55,8 +56,9 @@ public class AddressesController : ControllerBase
         var validationResult = await _updateAdressViewModelValidator.ValidateAsync(request);
         if (validationResult.IsValid == false)
         {
-            _logger.LogInformation(
-            "Validation failed for UpdateAddressViewModel. Errors: {ValidationErrors}",
+            _logger.LogWarning(
+            "Validation failed for UpdateAddressViewModel. TenantId: {TenantId}, Errors: {@ValidationErrors}",
+            addressId,
             validationResult.Errors);
             return BadRequest(validationResult.Errors);
         }
@@ -111,8 +113,9 @@ public class AddressesController : ControllerBase
         var validationResult = await zipValidator.ValidateAsync(request);
         if (validationResult.IsValid == false)
         {
-            _logger.LogInformation(
-            "Validation failed for SearchByZip. Errors: {ValidationErrors}",
+            _logger.LogWarning(
+            "Validation failed for SearchByZip. TenantId: {TenantId}, Errors: {@ValidationErrors}",
+            tenantId,
             validationResult.Errors);
             return BadRequest(validationResult.Errors);
         }

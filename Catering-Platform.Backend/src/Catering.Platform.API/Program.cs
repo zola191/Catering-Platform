@@ -10,11 +10,11 @@ using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
-    .WriteTo.File("logs/catering-platfrom.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+
+builder.Host.UseSerilog((ctx, config) =>
+    config.ReadFrom.Configuration(ctx.Configuration)
+          .Enrich.FromLogContext());
+
 // Add services to the container.
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -52,7 +52,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSerilog();
+
 builder.Services.AddWeb();
 builder.Services.AddApplication();
 builder.Services.AddPersistence(builder.Configuration);

@@ -13,7 +13,10 @@ public class DishService : IDishService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<IDishService> _logger;
 
-    public DishService(IDishRepository repository, IUnitOfWork unitOfWork, ILogger<IDishService> logger)
+    public DishService(
+        IDishRepository repository,
+        IUnitOfWork unitOfWork, 
+        ILogger<IDishService> logger)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
@@ -50,7 +53,7 @@ public class DishService : IDishService
 
         catch (DishNotFoundException ex)
         {
-            _logger.LogError(
+            _logger.LogWarning(
                 "Dish is not found {Id}. See Details: {Details}", id, ex.Message);
             throw;
         }
@@ -102,7 +105,7 @@ public class DishService : IDishService
 
         catch (DishNotFoundException ex)
         {
-            _logger.LogError(
+            _logger.LogWarning(
                 "Dish is not found {Id}. See Details: {Details}", id, ex.Message);
             throw;
         }
@@ -120,24 +123,30 @@ public class DishService : IDishService
 
     public async Task<Guid> DeleteAsync(Guid id)
     {
-        var existingDish = await _repository.GetByIdAsync(id);
-        if (existingDish == null)
-        {
-            throw new DishNotFoundException();
-        }
         try
         {
+            var existingDish = await _repository.GetByIdAsync(id);
+            if (existingDish == null)
+            {
+                throw new DishNotFoundException();
+            }
             _repository.Delete(existingDish);
             await _unitOfWork.SaveChangesAsync();
             return existingDish.Id;
         }
+
+        catch (DishNotFoundException ex)
+        {
+            _logger.LogWarning(
+                "Dish is not found {Id}. See Details: {Details}", id, ex.Message);
+            throw;
+        }
+
         catch (Exception ex)
         {
             _logger.LogError(
-                "Unable to delete dish {Name}, {Description}. See Details: {Details}",
-                existingDish.Name,
-                existingDish.Description,
-                ex.Message);
+                "Unable to delete dish {id}",
+                id);
             throw;
         }
     }

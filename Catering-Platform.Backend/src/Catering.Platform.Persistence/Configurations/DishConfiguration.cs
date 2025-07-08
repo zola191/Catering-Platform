@@ -18,7 +18,7 @@ public class DishConfiguration: IEntityTypeConfiguration<Dish>
             .HasMaxLength(Constants.MAX_TEXT_LENGTH_256);
         
         builder.Property(f => f.Description)
-            .IsRequired()
+            .IsRequired(false)
             .HasMaxLength(Constants.MAX_TEXT_LENGTH_2000);
         
         builder.Property(f => f.Price).IsRequired();

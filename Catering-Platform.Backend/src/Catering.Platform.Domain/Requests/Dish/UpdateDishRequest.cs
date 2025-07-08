@@ -12,7 +12,7 @@ public record UpdateDishRequest
     public bool IsAvailable { get; init; }
     public List<string> Ingredients { get; init; }
     public List<string> Allergens { get; init; }
-    public string PortionSize { get; init; }
+    public string? PortionSize { get; init; }
 
     public static void MapToDomain(Models.Dish entity, UpdateDishRequest request)
     {

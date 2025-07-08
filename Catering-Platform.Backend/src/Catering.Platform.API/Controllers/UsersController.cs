@@ -46,7 +46,7 @@ namespace Catering.Platform.API.Controllers
             if (validationResult.IsValid == false)
             {
                 _logger.LogInformation(
-                "Validation failed for CreateUser. Errors: {ValidationErrors}",
+                "Validation failed for CreateUser. Errors: {@ValidationErrors}",
                 validationResult.Errors);
                 return BadRequest(validationResult.Errors);
             }
@@ -65,7 +65,7 @@ namespace Catering.Platform.API.Controllers
             if (validationResult.IsValid == false)
             {
                 _logger.LogInformation(
-                "Validation failed for CreateSupplier. Errors: {ValidationErrors}",
+                "Validation failed for CreateSupplier. Errors: {@ValidationErrors}",
                 validationResult.Errors);
                 return BadRequest(validationResult.Errors);
             }
@@ -83,7 +83,7 @@ namespace Catering.Platform.API.Controllers
             if (validationResult.IsValid == false)
             {
                 _logger.LogInformation(
-                "Validation failed for CreateCustomer. Errors: {ValidationErrors}",
+                "Validation failed for CreateCustomer. Errors: {@ValidationErrors}",
                 validationResult.Errors);
                 return BadRequest(validationResult.Errors);
             }
@@ -101,7 +101,7 @@ namespace Catering.Platform.API.Controllers
             if (validationResult.IsValid == false)
             {
                 _logger.LogInformation(
-                "Validation failed for CreateCustomer. Errors: {ValidationErrors}",
+                "Validation failed for CreateCustomer. Errors: {@ValidationErrors}",
                 validationResult.Errors);
                 return BadRequest(validationResult.Errors);
             }
