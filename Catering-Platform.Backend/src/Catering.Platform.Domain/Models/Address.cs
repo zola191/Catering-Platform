@@ -18,5 +18,6 @@ namespace Catering.Platform.Domain.Models
         public NpgsqlTsVector SearchVector { get; set; }
         public Guid? CustomerId { get; set; }
         public Customer Customer { get; set; }
+        public List<Company> Companies { get; set; } = new List<Company>();
     }
 }

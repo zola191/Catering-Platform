@@ -16,6 +16,7 @@ public static class ApplicationExtensions
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<IAddressService, AddressService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<IHashService, HashService>();
         services.AddScoped<IJwtService, JwtService>();
 
