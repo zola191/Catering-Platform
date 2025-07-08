@@ -1,6 +1,7 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Domain.Requests.Company;
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Platform.API.Controllers
@@ -25,6 +26,14 @@ namespace Catering.Platform.API.Controllers
             _companyService = companyService;
             _logger = logger;
             _updateCompanyvalidator = updateCompanyvalidator;
+        }
+
+        [HttpGet("{companyId:guid}")]
+        public async Task<IActionResult> Get([FromRoute] Guid id)
+        {
+            var tenantId = Guid.NewGuid();
+            var companyViewModel = await _companyService.GetCompanyByIdAsync(id, tenantId);
+            return Ok(companyViewModel);
         }
 
         [HttpPost]

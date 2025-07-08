@@ -145,5 +145,21 @@ public class CompaniesControllerTests
         await _mockCompanyService.DidNotReceive().UpdateCompanyAsync(Arg.Any<UpdateCompanyRequest>(), Arg.Any<Guid>());
     }
 
+    [Fact]
+    public async Task Get_ReturnsCompany_WhenExists()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var expectedCompany = _fixture.Create<CompanyViewModel>();
 
+        _mockCompanyService.GetCompanyByIdAsync(companyId, Arg.Any<Guid>())
+            .Returns(expectedCompany);
+
+        // Act
+        var result = await _controller.Get(companyId);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(expectedCompany);
+    }
 }
