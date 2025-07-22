@@ -14,7 +14,7 @@ public class CompanyService : ICompanyService
     private readonly IAddressRepository _addressRepository;
     private readonly ICompanyRepository _companyRepository;
     private readonly ILogger<ICompanyService> _logger;
-
+    private const int MaxPageSize = 100;
     public CompanyService(
         ITenantRepository tenantRepository,
         IAddressRepository addressRepository,
@@ -61,6 +61,61 @@ public class CompanyService : ICompanyService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error creating Company. TenantId: {TenantId}", request.TenantId);
+            throw;
+        }
+    }
+
+    public async Task<PagedCompanyViewModel> GetCompaniesAsync(GetCompaniesRequest request, Guid userId)
+    {
+        try
+        {
+            var failures = new List<ValidationFailure>();
+            if (request.Page < 1)
+            {
+                failures.Add(new ValidationFailure(
+                    nameof(request.Page),
+                    $"Page must be at least 1. Received: {request.Page}"));
+            }
+
+            if (request.PageSize < 1)
+            {
+                failures.Add(new ValidationFailure(
+                    nameof(request.PageSize),
+                    $"PageSize must be greater than 0. Received: {request.PageSize}"));
+            }
+
+            if (request.PageSize > MaxPageSize)
+            {
+                failures.Add(new ValidationFailure(
+                    nameof(request.PageSize),
+                    $"PageSize cannot exceed {MaxPageSize}. Received: {request.PageSize}"));
+            }
+
+            if (failures.Any())
+            {
+                _logger.LogError("Validation errors to fetch Companies with pagination");
+                throw new InvalidPaginationException(failures);
+            }
+
+            var (companies, totalCount) = await _companyRepository.GetListAsync(
+                request.TenantId,
+                request.Page,
+                request.PageSize);
+
+            return PagedCompanyViewModel.MapToViewModel(
+                companies,
+                totalCount,
+                request.Page,
+                request.PageSize);
+        }
+        catch (InvalidPaginationException ex)
+        {
+            _logger.LogError("Validation errors to fetch Companies with pagination");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetch Companies with pagination. UserId: {UserId}", userId);
             throw;
         }
     }

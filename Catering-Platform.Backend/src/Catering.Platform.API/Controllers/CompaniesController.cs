@@ -1,8 +1,8 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Domain.Requests.Company;
 using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Catering.Platform.API.Controllers
 {
@@ -49,6 +49,23 @@ namespace Catering.Platform.API.Controllers
         {
             var tenantId = Guid.NewGuid();
             var companies = await _companyService.SearchCompaniesByNameAsync(query, tenantId);
+            return Ok(companies);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Companies(
+        [FromQuery] Guid? tenantId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+        {
+            var userId = Guid.NewGuid();
+            var request = new GetCompaniesRequest()
+            {
+                TenantId = tenantId,
+                Page = page,
+                PageSize = pageSize,
+            };
+            var companies = await _companyService.GetCompaniesAsync(request, userId);
             return Ok(companies);
         }
 

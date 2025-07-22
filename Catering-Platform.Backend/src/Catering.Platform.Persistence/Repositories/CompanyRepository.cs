@@ -29,6 +29,26 @@ public class CompanyRepository : ICompanyRepository
         return await _dbContext.Set<Company>().FirstOrDefaultAsync(c => c.TaxNumber == taxNumber);
     }
 
+    public async Task<(IEnumerable<Company>, int totalCount)> GetListAsync(Guid? tenantId, int page, int pageSize)
+    {
+        var query = _dbContext.Companies.AsNoTracking().AsQueryable();
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(c => c.TenantId == tenantId.Value);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var companies = await query
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (companies, totalCount);
+    }
+
     public async Task<IEnumerable<Company>?> SearchByNameAsync(Guid? tenantId, string query)
     {
         var normalizedQuery = query.Trim().ToLower();
