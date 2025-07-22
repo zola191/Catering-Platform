@@ -1,6 +1,4 @@
-﻿using AutoFixture.AutoNSubstitute;
-using AutoFixture;
-using Catering.Platform.API.Validators.Tenants;
+﻿using Catering.Platform.API.Validators.Tenants;
 using Catering.Platform.Domain.Requests.Tenant;
 using FluentValidation;
 using Catering.Platform.Domain.Shared;
@@ -9,82 +7,64 @@ namespace Catering.Platform.UnitTests;
 
 public class TenantValidationTests
 {
-    private readonly IFixture _fixture;
+    private readonly IValidator<BlockTenantRequest> _validator;
 
     public TenantValidationTests()
     {
-        _fixture = new Fixture().Customize(new AutoNSubstituteCustomization());
+        _validator = new BlockTenantRequestValidator();
     }
 
     [Fact]
-    public async Task CreateTenantRequestValidator_WithEmptyName_ThrowsValidationException()
+    public async Task Validate_WithEmptyReason_ThrowsValidationException()
     {
         // Arrange
-        var request = new CreateTenantRequest { Name = "" };
-
-        var validator = new CreateTenantRequestValidatior();
+        var request = new BlockTenantRequest { Reason = string.Empty };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ValidationException>(
-            () => validator.ValidateAndThrowAsync(request));
+            () => _validator.ValidateAndThrowAsync(request));
 
-        Assert.Contains("Name is required", exception.Message);
+        Assert.Contains("The reason must be provided", exception.Message);
     }
 
     [Fact]
-    public async Task CreateTenantRequestValidator_WithNameOverMaxLength_ThrowsValidationException()
+    public async Task Validate_WithNullReason_ThrowsValidationException()
     {
         // Arrange
-        var name = new string('A', Constants.MAX_TEXT_LENGTH_200 + 1);
-        var request = new CreateTenantRequest { Name = name };
-
-        var validator = new CreateTenantRequestValidatior();
+        var request = new BlockTenantRequest { Reason = null };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ValidationException>(
-            () => validator.ValidateAndThrowAsync(request));
+            () => _validator.ValidateAndThrowAsync(request));
+
+        Assert.Contains("The reason must be provided", exception.Message);
+    }
+
+    [Fact]
+    public async Task Validate_WithReasonExceedingMaxLength_ThrowsValidationException()
+    {
+        // Arrange
+        var longReason = new string('A', Constants.MAX_TEXT_LENGTH_500 + 1);
+        var request = new BlockTenantRequest { Reason = longReason };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ValidationException>(
+            () => _validator.ValidateAndThrowAsync(request));
 
         Assert.Contains("Maximum Length exceeded", exception.Message);
     }
 
     [Fact]
-    public async Task CreateTenantRequestValidator_WithNameWithinLimits_PassesValidation()
+    public async Task Validate_WithValidReason_PassesValidation()
     {
         // Arrange
-        var request = new CreateTenantRequest { Name = "Valid Name" };
-        var validator = new CreateTenantRequestValidatior();
+        var validReason = "This is a valid reason.";
+        var request = new BlockTenantRequest { Reason = validReason };
 
-        // Act & Assert
-        await validator.ValidateAndThrowAsync(request);
+        // Act
+        await _validator.ValidateAndThrowAsync(request);
+
+        // Assert
         Assert.True(true);
-    }
-
-    [Fact]
-    public async Task UpdateTenantRequestValidator_WithEmptyName_ThrowsValidationException()
-    {
-        // Arrange
-        var request = new UpdateTenantRequest { Name = "" };
-        var validator = new UpdateTenantRequestValidatior();
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(
-            () => validator.ValidateAndThrowAsync(request));
-
-        Assert.Contains("Name is required", exception.Message);
-    }
-
-    [Fact]
-    public async Task UpdateTenantRequestValidator_WithNameOverMaxLength_ThrowsValidationException()
-    {
-        // Arrange
-        var name = new string('A', Constants.MAX_TEXT_LENGTH_200 + 1);
-        var request = new UpdateTenantRequest { Name = name };
-        var validator = new UpdateTenantRequestValidatior();
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(
-            () => validator.ValidateAndThrowAsync(request));
-
-        Assert.Contains("Maximum Length exceeded", exception.Message);
     }
 }

@@ -241,5 +241,58 @@ namespace Catering.Platform.UnitTests
             _mockRepository.DidNotReceiveWithAnyArgs().Delete(Arg.Any<Tenant>());
             await _mockUnitOfWork.DidNotReceive().SaveChangesAsync();
         }
+
+        [Fact]
+        public async Task BlockTenantAsync_ValidRequest_ReturnsViewModel()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var request = _fixture.Create<BlockTenantRequest>();
+            var tenant = _fixture.Build<Tenant>()
+                .With(t => t.Id, tenantId)
+                .With(t => t.IsActive, false)
+                .Create();
+
+            _mockRepository.BlockAsync(tenantId, request.Reason)
+                .Returns(tenant);
+
+            // Act
+            var result = await _tenantService.BlockTenantAsync(tenantId, request);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(tenant.Id, result.Id);
+            Assert.False(result.IsActive);
+        }
+
+        [Fact]
+        public async Task BlockTenantAsync_NonExistentTenant_ThrowsNotFoundException()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var request = _fixture.Create<BlockTenantRequest>();
+
+            _mockRepository.BlockAsync(tenantId, request.Reason)
+                .Throws(new TenantNotFoundException());
+
+            // Act & Assert
+            await Assert.ThrowsAsync<TenantNotFoundException>(
+                () => _tenantService.BlockTenantAsync(tenantId, request));
+        }
+
+        [Fact]
+        public async Task BlockTenantAsync_RepositoryError_ThrowsException()
+        {
+            // Arrange
+            var tenantId = Guid.NewGuid();
+            var request = _fixture.Create<BlockTenantRequest>();
+
+            _mockRepository.BlockAsync(tenantId, request.Reason)
+                .Throws(new Exception("Database error"));
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(
+                () => _tenantService.BlockTenantAsync(tenantId, request));
+        }
     }
 }
