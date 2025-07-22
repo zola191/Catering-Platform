@@ -9,14 +9,16 @@ using FluentValidation.Results;
 using FluentValidation;
 using Catering.Platform.Domain.Requests.Tenant;
 using Catering.Platform.Domain.Exceptions;
-using Xunit.Sdk;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.AspNetCore.Http;
+using Catering.Platform.Domain.Shared;
 
 namespace Catering.Platform.UnitTests
 {
     public class TenantsControllerTests
     {
+        //TODO FluentAssertions попрактиковаться
+
         private readonly IValidator<CreateTenantRequest> _mockCreateTenantRequestValidatior;
         private readonly IValidator<UpdateTenantRequest> _mockUpdateTenantRequestValidatior;
         private readonly ITenantService _mockTenantService;
@@ -124,7 +126,7 @@ namespace Catering.Platform.UnitTests
         {
             // Arrange
             var request = _fixture.Create<CreateTenantRequest>();
-            var validationResult = new ValidationResult();
+            var validationResult = new FluentValidation.Results.ValidationResult();
             var expectedResult = Guid.NewGuid();
 
             _mockCreateTenantRequestValidatior.ValidateAsync(request)
@@ -150,7 +152,7 @@ namespace Catering.Platform.UnitTests
             var request = _fixture.Build<CreateTenantRequest>()
                 .With(f => f.Name, string.Empty)
                 .Create();
-            var validationResult = new ValidationResult(new List<ValidationFailure>
+            var validationResult = new FluentValidation.Results.ValidationResult(new List<ValidationFailure>
             {
                 new ValidationFailure("Name", "Name is required")
             });
@@ -176,7 +178,7 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var requestId = Guid.NewGuid();
             var request = _fixture.Create<UpdateTenantRequest>();
-            var validationResult = new ValidationResult();
+            var validationResult = new FluentValidation.Results.ValidationResult();
 
             _mockUpdateTenantRequestValidatior.ValidateAsync(request)
                 .Returns(Task.FromResult(validationResult));
@@ -201,7 +203,7 @@ namespace Catering.Platform.UnitTests
             var request = _fixture.Build<UpdateTenantRequest>()
                 .With(f => f.Name, string.Empty)
                 .Create();
-            var validationResult = new ValidationResult(new List<ValidationFailure>
+            var validationResult = new FluentValidation.Results.ValidationResult(new List<ValidationFailure>
             {
                 new ValidationFailure("Name", "Name is required")
             });
@@ -226,7 +228,7 @@ namespace Catering.Platform.UnitTests
             // Arrange
             var requestId = Guid.NewGuid();
             var request = _fixture.Create<UpdateTenantRequest>();
-            var validationResult = new ValidationResult();
+            var validationResult = new FluentValidation.Results.ValidationResult();
 
             _mockUpdateTenantRequestValidatior.ValidateAsync(request)
                 .Returns(Task.FromResult(validationResult));
@@ -246,5 +248,41 @@ namespace Catering.Platform.UnitTests
             Assert.Equal("Tenant not found", problemDetails.Title);
             Assert.Equal(StatusCodes.Status404NotFound, problemDetails.Status);
         }
+
+        [Fact]
+        public async Task Delete_ExistingTenant_ReturnsNoContent()
+        {
+            // Arrange
+            var tenantId = _fixture.Create<Guid>();
+            _mockTenantService.DeleteAsync(tenantId).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _controller.Delete(tenantId);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+
+            // Verify
+            await _mockTenantService.Received(1).DeleteAsync(tenantId);
+        }
+
+        [Fact]
+        public async Task Delete_NonExistentTenant_ThrowsTenantNotFoundException()
+        {
+            // Arrange
+            var tenantId = _fixture.Create<Guid>();
+            _mockTenantService
+                .When(x => x.DeleteAsync(tenantId))
+                .Throw(new TenantNotFoundException());
+
+            // Act
+            var exception = await Assert.ThrowsAsync<TenantNotFoundException>(
+                () => _controller.Delete(tenantId));
+            
+            // Assert
+            Assert.Equal(ErrorMessages.TenantNotFound, exception.Message);
+            await _mockTenantService.Received(1).DeleteAsync(tenantId);
+        }
+
     }
 }

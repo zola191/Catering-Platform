@@ -1,4 +1,5 @@
 using Catering.Platform.API.Extensions;
+using Catering.Platform.API.Middlewares;
 using Catering.Platform.Applications.Extensions;
 using Catering.Platform.Persistence;
 using Catering.Platform.Persistence.Extensions;
@@ -25,6 +26,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseAuthorization();
 

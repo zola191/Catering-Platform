@@ -36,10 +36,10 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult> GetById([FromRoute] Guid id, CancellationToken ct)
+    public async Task<ActionResult> GetById([FromRoute] Guid id)
     {
         var command = new GetCategoryByIdQuery() { Id = id };
-        var result = await _mediator.Send(command, ct); // взамен CancellationToken httpCancel, добавить Middleware для обработки данной ошибки (операция прервана пользователем)
+        var result = await _mediator.Send(command); // взамен CancellationToken httpCancel, добавить Middleware для обработки данной ошибки (операция прервана пользователем)
         if (result == null)
         {
             return NotFound(); // проверить код при CancellationToken.IsCancellationRequested
@@ -76,8 +76,7 @@ public class CategoriesController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<Guid>> Update(
         [FromRoute] Guid id,
-        [FromBody] UpdateCategoryRequest request,
-        CancellationToken ct = default)
+        [FromBody] UpdateCategoryRequest request)
     {
         var command = new UpdateCategoryCommand()
         {
@@ -88,7 +87,7 @@ public class CategoriesController : ControllerBase
 
         try
         {
-            var result = await _mediator.Send(command, ct);
+            var result = await _mediator.Send(command);
             return Ok(result);
         }
 
@@ -108,11 +107,10 @@ public class CategoriesController : ControllerBase
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<Guid>> Delete(
-        [FromRoute] Guid id,
-        CancellationToken ct = default)
+        [FromRoute] Guid id)
     {
         var command = new DeleteCategoryCommand() { Id = id };
-        var result = await _mediator.Send(command, ct);
+        var result = await _mediator.Send(command);
         return Ok(result);
     }
 }
