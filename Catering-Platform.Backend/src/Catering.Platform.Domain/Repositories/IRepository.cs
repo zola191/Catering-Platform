@@ -30,8 +30,8 @@ where T : Entity
     /// </summary>
     /// <returns></returns>
     Task<List<T>> GetAllAsync();
-    Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<Guid> AddAsync(T entity, CancellationToken cancellationToken = default);
+    Task<T?> GetByIdAsync(Guid id);
+    Task<Guid> AddAsync(T entity);
     Guid Update(T entity);
     void Delete(T entity);
 }

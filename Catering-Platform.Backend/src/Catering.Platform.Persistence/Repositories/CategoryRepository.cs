@@ -11,8 +11,8 @@ internal sealed class CategoryRepository : Repository<Category>, ICategoryReposi
         
     }
 
-    public Task<Category?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    public Task<Category?> GetByNameAsync(string name)
     {
-        return DbContext.Categories.FirstOrDefaultAsync(f => f.Name == name, cancellationToken);
+        return DbContext.Categories.FirstOrDefaultAsync(f => f.Name == name);
     }
 }
