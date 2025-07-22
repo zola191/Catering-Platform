@@ -1,6 +1,7 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels;
 using Catering.Platform.Domain.Exceptions;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Caching.Distributed;
@@ -51,7 +52,14 @@ namespace Catering.Platform.Applications.Services
         {
             try
             {
-                var result = await _repository.BlockAsync(id, request.Reason);
+                var existingTenant = await _repository.GetByIdAsync(id);
+                if (existingTenant == null)
+                    throw new TenantNotFoundException();
+
+                if (existingTenant.IsActive == true)
+                    throw new TenantHasActiveDataException();
+
+                var result = await _repository.BlockAsync(existingTenant, request.Reason);
                 return TenantViewModel.MapToViewModel(result);
             }
             catch (Exception ex)
@@ -63,7 +71,15 @@ namespace Catering.Platform.Applications.Services
 
         public async Task<TenantViewModel> UnblockTenantAsync(Guid id)
         {
-            var existingTenant = await _repository.UnBlockAsync(id);
+            var existingTenant = await _repository.GetByIdAsync(id);
+            if (existingTenant == null)
+                throw new TenantNotFoundException();
+
+            if (existingTenant.IsActive == true)
+                throw new TenantHasActiveDataException();
+
+            await _repository.UnBlockAsync(existingTenant);
+
             return TenantViewModel.MapToViewModel(existingTenant);
         }
 
