@@ -1,5 +1,6 @@
-﻿
-using Catering.Platform.Domain.Exceptions;
+﻿using Catering.Platform.Domain.Exceptions;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Platform.API.Middlewares
 {
@@ -12,26 +13,44 @@ namespace Catering.Platform.API.Middlewares
             {
                 await next(context);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                switch (e)
+                var problemDetails = ex switch
                 {
-                    case TenantNotFoundException tenantNotFoundException:
-                        _logger.LogError("Attempt to delete a non-existent tenant");
-                        context.Response.StatusCode = 404;
-                        await context.Response.WriteAsync(tenantNotFoundException.Message);
-                        break;
-                    case TenantAlreadyBlockException tenantAlreadyBlockException:
-                        _logger.LogError("Tenant already blocked.");
-                        context.Response.StatusCode = 400;
-                        await context.Response.WriteAsync(tenantAlreadyBlockException.Message);
-                        break;
-                    default:
-                        context.Response.StatusCode = 500;
-                        _logger.LogError("Something went wrong");
-                        await context.Response.WriteAsync("Something went wrong");
-                        break;
-                }
+                    ValidationException ve => new ProblemDetails
+                    {
+                        Status = 400,
+                        Title = "Validation error",
+                        Detail = ve.Message,
+                        Extensions = { ["errors"] = ve.Errors }
+                    },
+
+                    TenantNotFoundException tnfe => new ProblemDetails
+                    {
+                        Status = 404,
+                        Title = "Tenant not found",
+                        Detail = tnfe.Message
+                    },
+
+                    TenantInactiveException tie => new ProblemDetails
+                    {
+                        Status = 403,
+                        Title = "Tenant inactive",
+                        Detail = tie.Message
+                    },
+
+                    _ => new ProblemDetails
+                    {
+                        Status = 500,
+                        Title = "Internal server error",
+                        Detail = "An unexpected error occurred"
+                    }
+                };
+
+                context.Response.StatusCode = problemDetails.Status.Value;
+                await context.Response.WriteAsJsonAsync(problemDetails);
+
+                _logger.LogError(ex, "Error processing request: {Message}", ex.Message);
             }
         }
     }
