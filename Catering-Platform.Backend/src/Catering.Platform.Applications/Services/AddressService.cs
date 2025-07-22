@@ -4,7 +4,6 @@ using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Adress;
-using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -84,7 +83,7 @@ public class AddressService : IAddressService
             UpdateAddressViewModel.MapToDomain(address, request);
 
             _adressRepository.Update(address);
-            _unitOfWork.SaveChanges();
+            await _unitOfWork.SaveChangesAsync();
 
             return AddressViewModel.MapToViewModel(address);
 
