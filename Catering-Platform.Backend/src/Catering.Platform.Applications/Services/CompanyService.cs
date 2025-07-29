@@ -155,6 +155,9 @@ public class CompanyService : ICompanyService
             if (existingCompany.TenantId != userId)
                 throw new UnauthorizedAccessException("Company does not belong to this tenant");
 
+            if (existingCompany.IsBlocked == false)
+                throw new InvalidOperationException("Company is already Unblocked");
+
             existingCompany.IsBlocked = false;
             await _companyRepository.UpdateAsync(existingCompany);
             return CompanyViewModel.MapToViewModel(existingCompany);

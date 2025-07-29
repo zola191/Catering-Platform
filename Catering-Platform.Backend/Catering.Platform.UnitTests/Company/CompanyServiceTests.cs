@@ -387,4 +387,26 @@ public class CompanyServiceTests
         await Assert.ThrowsAsync<Exception>(
             () => _service.UnblockCompanyAsync(companyId, userId));
     }
+
+    [Fact]
+    public async Task UnblockCompanyAsync_ThrowsInvalidOperation_WhenCompanyAlreadyUnblocked()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .With(c => c.IsBlocked, false)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.UnblockCompanyAsync(companyId, userId));
+
+        ex.Message.Should().Be("Company is already Unblocked");
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
 }
