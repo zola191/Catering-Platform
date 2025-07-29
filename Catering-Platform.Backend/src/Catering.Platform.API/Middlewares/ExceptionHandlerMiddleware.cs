@@ -60,6 +60,21 @@ namespace Catering.Platform.API.Middlewares
                         Detail = uae.Message
                     },
 
+                    InvalidOperationException ioe when ioe.Message.Contains("already blocked") =>
+                    new ProblemDetails
+                    {
+                        Status = StatusCodes.Status409Conflict,
+                        Title = "Conflict",
+                        Detail = ioe.Message
+                    },
+
+                    InvalidOperationException ioe => new ProblemDetails
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Title = "Invalid operation",
+                        Detail = ioe.Message
+                    },
+
                     _ => new ProblemDetails
                     {
                         Status = 500,

@@ -251,4 +251,39 @@ public class CompaniesControllerTests
         await _controller.Invoking(c => c.Unblock(companyId))
             .Should().ThrowAsync<CompanyNotFoundException>();
     }
+
+    [Fact]
+    public async Task Block_ReturnsOkWithCompany_WhenBlockSuccessful()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var expected = _fixture.Create<CompanyViewModel>();
+
+        _mockCompanyService.BlockCompanyAsync(companyId, Arg.Any<Guid>())
+            .Returns(expected);
+
+        // Act
+        var result = await _controller.Block(companyId);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().Be(expected);
+
+        await _mockCompanyService.Received(1)
+            .BlockCompanyAsync(companyId, Arg.Any<Guid>());
+    }
+
+    [Fact]
+    public async Task Block_PropagatesException_WhenErrorOccurs()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+
+        _mockCompanyService.BlockCompanyAsync(companyId, Arg.Any<Guid>())
+            .ThrowsAsync(CompanyNotFoundException.ById(companyId));
+
+        // Act & Assert
+        await _controller.Invoking(c => c.Block(companyId))
+            .Should().ThrowAsync<CompanyNotFoundException>();
+    }
 }
