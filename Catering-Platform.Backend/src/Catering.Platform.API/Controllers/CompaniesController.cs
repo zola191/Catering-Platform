@@ -86,7 +86,7 @@ namespace Catering.Platform.API.Controllers
             var companyViewModel = await _companyService.UpdateCompanyAsync(request, tenantId);
             return Ok(companyViewModel);
         }
-        //PATCH /api/companies/{companyId}/unblock
+
         [HttpPatch("{companyId:guid}")]
         public async Task<IActionResult> Unblock([FromRoute] Guid companyId)
         {
