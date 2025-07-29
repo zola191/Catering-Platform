@@ -53,12 +53,19 @@ namespace Catering.Platform.API.Middlewares
                         Detail = tie.Message
                     },
 
+                    UnauthorizedAccessException uae => new ProblemDetails
+                    {
+                        Status = 403,
+                        Title = "Access denied",
+                        Detail = uae.Message
+                    },
+
                     _ => new ProblemDetails
                     {
                         Status = 500,
                         Title = "Internal server error",
                         Detail = "An unexpected error occurred"
-                    }
+                    },
                 };
 
                 context.Response.StatusCode = problemDetails.Status.Value;
