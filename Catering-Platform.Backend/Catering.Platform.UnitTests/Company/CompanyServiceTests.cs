@@ -8,6 +8,7 @@ using Catering.Platform.Domain.Requests.Company;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Catering.Platform.UnitTests.Company;
 
@@ -300,5 +301,112 @@ public class CompanyServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<CompanyNotFoundException>(
             () => _service.SearchCompaniesByNameAsync(request, userId));
+    }
+
+    [Fact]
+    public async Task UnblockCompanyAsync_ReturnsUnblockedCompany_WhenSuccess()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .With(c => c.IsBlocked, true)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+        _mockCompanyRepository.UpdateAsync(Arg.Any<Domain.Models.Company>()).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.UnblockCompanyAsync(companyId, userId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(companyId);
+        company.IsBlocked.Should().BeFalse();
+
+        await _mockCompanyRepository.Received(1).GetByIdAsync(companyId);
+        await _mockCompanyRepository.Received(1).UpdateAsync(company);
+    }
+
+    [Fact]
+    public async Task UnblockCompanyAsync_ThrowsCompanyNotFound_WhenCompanyNotExists()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns((Domain.Models.Company)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<CompanyNotFoundException>(
+            () => _service.UnblockCompanyAsync(companyId, userId));
+
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+    [Fact]
+    public async Task UnblockCompanyAsync_ThrowsUnauthorized_WhenCompanyBelongsToOtherTenant()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, otherUserId)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _service.UnblockCompanyAsync(companyId, userId));
+
+        ex.Message.Should().Be("Company does not belong to this tenant");
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+    [Fact]
+    public async Task UnblockCompanyAsync_ThrowsGenericException_WhenUnexpectedErrorOccurs()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+        _mockCompanyRepository.UpdateAsync(Arg.Any<Domain.Models.Company>())
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(
+            () => _service.UnblockCompanyAsync(companyId, userId));
+    }
+
+    [Fact]
+    public async Task UnblockCompanyAsync_ThrowsInvalidOperation_WhenCompanyAlreadyUnblocked()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .With(c => c.IsBlocked, false)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.UnblockCompanyAsync(companyId, userId));
+
+        ex.Message.Should().Be("Company is already Unblocked");
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
     }
 }

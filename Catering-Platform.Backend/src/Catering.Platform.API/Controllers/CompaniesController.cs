@@ -103,5 +103,14 @@ namespace Catering.Platform.API.Controllers
             var companyViewModel = await _companyService.UpdateCompanyAsync(request, tenantId);
             return Ok(companyViewModel);
         }
+
+        [HttpPatch("{companyId:guid}")]
+        public async Task<IActionResult> Unblock([FromRoute] Guid companyId)
+        {
+            //TODO извлечь из JWT
+            var userId = Guid.NewGuid();
+            var result = await _companyService.UnblockCompanyAsync(companyId, userId);
+            return Ok(result);
+        }
     }
 }

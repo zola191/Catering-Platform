@@ -219,4 +219,36 @@ public class CompaniesControllerTests
         var actualCompanies = okResult.Value.Should().BeAssignableTo<IEnumerable<CompanyViewModel>>().Subject;
         actualCompanies.Should().BeEquivalentTo(expectedCompanies);
     }
+
+    [Fact]
+    public async Task Unblock_ReturnsOkWithCompany_WhenSuccess()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var expected = _fixture.Create<CompanyViewModel>();
+
+        _mockCompanyService.UnblockCompanyAsync(companyId, Arg.Any<Guid>())
+            .Returns(expected);
+
+        // Act
+        var result = await _controller.Unblock(companyId);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeEquivalentTo(expected);
+    }
+
+    [Fact]
+    public async Task Unblock_PropagatesException_WhenErrorOccurs()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+
+        _mockCompanyService.UnblockCompanyAsync(companyId, Arg.Any<Guid>())
+            .ThrowsAsync(CompanyNotFoundException.ById(companyId));
+
+        // Act & Assert
+        await _controller.Invoking(c => c.Unblock(companyId))
+            .Should().ThrowAsync<CompanyNotFoundException>();
+    }
 }
