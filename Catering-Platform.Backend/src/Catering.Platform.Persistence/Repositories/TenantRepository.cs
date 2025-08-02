@@ -1,5 +1,6 @@
 ﻿using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 namespace Catering.Platform.Persistence.Repositories
 {
     internal class TenantRepository : Repository<Tenant>, ITenantRepository
@@ -17,6 +18,13 @@ namespace Catering.Platform.Persistence.Repositories
 
             await DbContext.SaveChangesAsync();
             return tenant;
+        }
+
+        public async Task<Tenant?> GetByIdWithAddresses(Guid tenantId)
+        {
+            return await DbContext.Tenants
+                .Include(t => t.Addresses)
+                .FirstOrDefaultAsync(f => f.Id == tenantId);
         }
 
         public async Task<Tenant> UnBlockAsync(Tenant tenant)

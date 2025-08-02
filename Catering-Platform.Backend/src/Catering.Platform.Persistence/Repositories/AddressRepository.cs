@@ -9,4 +9,9 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
     {
         await dbContext.AddAsync(entity);
     }
+
+    public void Update(Address address)
+    {
+        dbContext.Update(address);
+    }
 }

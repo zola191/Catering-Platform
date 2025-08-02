@@ -13,6 +13,7 @@ using NSubstitute.ExceptionExtensions;
 using Microsoft.AspNetCore.Http;
 using Catering.Platform.Domain.Shared;
 using Catering.Platform.API.Validators.Tenants;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Catering.Platform.UnitTests.Tenant
 {
@@ -32,8 +33,8 @@ namespace Catering.Platform.UnitTests.Tenant
             _mockCreateTenantRequestValidatior = Substitute.For<IValidator<CreateTenantRequest>>();
             _mockUpdateTenantRequestValidatior = Substitute.For<IValidator<UpdateTenantRequest>>();
             _mockTenantService = Substitute.For<ITenantService>();
-            _mockLogger = Substitute.For<ILogger<TenantsController>>();
-
+            //_mockLogger = Substitute.For<ILogger<TenantsController>>(); // заменить на NullLogger вместо Substitute
+            _mockLogger = NullLogger<TenantsController>.Instance;
             _controller = new TenantsController(
                 _mockTenantService,
                 _mockCreateTenantRequestValidatior,

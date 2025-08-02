@@ -41,7 +41,7 @@ public class AddressesControllerTests
         var tenantId = Guid.NewGuid();
         var request = _fixture.Create<CreateAddressViewModel>();
         var addressId = Guid.NewGuid();
-
+        // можно перенести в общий класс для переиспользования ObjectCreator, но необязательно
         var addressViewModel = _fixture.Build<AddressViewModel>()
                                        .With(f => f.Id, addressId)
                                        .With(f => f.TenantId, tenantId)
