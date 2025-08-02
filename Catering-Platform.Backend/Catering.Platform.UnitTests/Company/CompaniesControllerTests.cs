@@ -188,7 +188,7 @@ public class CompaniesControllerTests
     {
         // Arrange
         var taxNumber = "1234567890";
-        var expectedException = new CompanyNotFoundException(taxNumber);
+        var expectedException = CompanyNotFoundException.ByTaxNumber(taxNumber);
 
         _mockCompanyService.GetCompanyByTaxNumberAsync(taxNumber, Arg.Any<Guid>())
             .Throws(expectedException);
@@ -199,5 +199,24 @@ public class CompaniesControllerTests
 
         exception.Should().BeEquivalentTo(expectedException);
         exception.Message.Should().Contain(taxNumber);
+    }
+
+    [Fact]
+    public async Task SearchByName_ReturnsCompanies_WhenFound()
+    {
+        // Arrange
+        var query = new SearchByNameRequest { Name = "Test" };
+        var expectedCompanies = _fixture.CreateMany<CompanyViewModel>(2).ToList();
+
+        _mockCompanyService.SearchCompaniesByNameAsync(query, Arg.Any<Guid>())
+            .Returns(Task.FromResult<IEnumerable<CompanyViewModel>>(expectedCompanies));
+
+        // Act
+        var result = await _controller.SearchByName(query);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        var actualCompanies = okResult.Value.Should().BeAssignableTo<IEnumerable<CompanyViewModel>>().Subject;
+        actualCompanies.Should().BeEquivalentTo(expectedCompanies);
     }
 }

@@ -29,6 +29,15 @@ public class CompanyRepository : ICompanyRepository
         return await _dbContext.Set<Company>().FirstOrDefaultAsync(c => c.TaxNumber == taxNumber);
     }
 
+    public async Task<IEnumerable<Company>?> SearchByNameAsync(Guid? tenantId, string query)
+    {
+        var normalizedQuery = query.Trim().ToLower();
+        return await _dbContext.Set<Company>()
+            .Where(c => c.Name.ToLower().Contains(normalizedQuery))
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task UpdateAsync(Company company)
     {
         _dbContext.Update(company);
