@@ -4,11 +4,11 @@ using FluentValidation;
 
 namespace Catering.Platform.API.Validators.Company;
 
-public class CreateCompanyRequestValidator : AbstractValidator<CreateCompanyRequest>
+public class UpdateCompanyRequestValidator : AbstractValidator<UpdateCompanyRequest>
 {
-    public CreateCompanyRequestValidator()
+    public UpdateCompanyRequestValidator()
     {
-        RuleFor(f => f.TenantId)
+        RuleFor(f => f.CompanyId)
             .NotEmpty()
             .WithMessage("TenantId is required");
 
@@ -18,5 +18,4 @@ public class CreateCompanyRequestValidator : AbstractValidator<CreateCompanyRequ
         RuleFor(f => f.Phone).ApplyPhoneRules();
         RuleFor(f => f.Email).ApplyEmailRules();
     }
-
 }

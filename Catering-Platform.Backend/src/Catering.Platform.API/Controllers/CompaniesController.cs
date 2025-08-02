@@ -10,17 +10,21 @@ namespace Catering.Platform.API.Controllers
     public class CompaniesController : ControllerBase
     {
         private readonly IValidator<CreateCompanyRequest> _createCompanyvalidator;
+        private readonly IValidator<UpdateCompanyRequest> _updateCompanyvalidator;
         private readonly ICompanyService _companyService;
         private readonly ILogger<CompaniesController> _logger;
 
         public CompaniesController(
             IValidator<CreateCompanyRequest> createCompanyvalidator,
+            IValidator<UpdateCompanyRequest> updateCompanyvalidator,
             ICompanyService companyService,
             ILogger<CompaniesController> logger)
         {
             _createCompanyvalidator = createCompanyvalidator;
+            _updateCompanyvalidator = updateCompanyvalidator;
             _companyService = companyService;
             _logger = logger;
+            _updateCompanyvalidator = updateCompanyvalidator;
         }
 
         [HttpPost]
@@ -40,6 +44,22 @@ namespace Catering.Platform.API.Controllers
             return Created(
                 new Uri($"/api/company/{companyViewModel.Id}", UriKind.Relative),
                 companyViewModel);
+        }
+
+        [HttpPut("{companyId:guid}")]
+        public async Task<IActionResult> Update([FromBody] UpdateCompanyRequest request)
+        {
+            var tenantId = Guid.NewGuid();
+            var validationResult = await _updateCompanyvalidator.ValidateAsync(request);
+            if (validationResult.IsValid == false)
+            {
+                _logger.LogInformation(
+                "Validation failed for UpdateCompany. Errors: {@ValidationErrors}",
+                validationResult.Errors);
+                return BadRequest(validationResult.Errors);
+            }
+            var companyViewModel = await _companyService.UpdateCompanyAsync(request, tenantId);
+            return Ok(companyViewModel);
         }
     }
 }
