@@ -5,7 +5,7 @@ public class NotFoundException : Exception
     public string EntityName { get; }
     public Guid? EntityId { get; }
 
-    private NotFoundException(string entityName, Guid? entityId, string message)
+    protected NotFoundException(string entityName, Guid? entityId, string message)
         : base(message)
     {
         EntityName = entityName;
