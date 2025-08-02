@@ -7,4 +7,5 @@ public interface ICompanyService
 {
     Task<CompanyViewModel> CreateCompanyAsync(CreateCompanyRequest request, Guid userId);
     Task<CompanyViewModel> UpdateCompanyAsync(UpdateCompanyRequest request, Guid userId);
+    Task<CompanyViewModel> GetCompanyByIdAsync(Guid companyId, Guid userId);
 }

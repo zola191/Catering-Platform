@@ -3,6 +3,7 @@ using Catering.Platform.Applications.ViewModels.Company;
 using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Company;
+using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -60,6 +61,27 @@ public class CompanyService : ICompanyService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error creating Company. TenantId: {TenantId}", request.TenantId);
+            throw;
+        }
+    }
+
+    public async Task<CompanyViewModel> GetCompanyByIdAsync(Guid companyId, Guid userId)
+    {
+        try
+        {
+            var existingCompany = await _companyRepository.GetByIdAsync(companyId);
+            if (existingCompany == null)
+                throw new CompanyNotFoundException(companyId);
+            return CompanyViewModel.MapToViewModel(existingCompany);
+        }
+        catch (CompanyNotFoundException ex)
+        {
+            _logger.LogError("Company not found. CompanyId: {CompanyId}", companyId);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetch Company. CompanyId: {CompanyId}", companyId);
             throw;
         }
     }

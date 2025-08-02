@@ -1,6 +1,7 @@
 ﻿using AutoFixture;
 using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Services;
+using Catering.Platform.Applications.ViewModels.Company;
 using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Company;
@@ -175,5 +176,41 @@ public class CompanyServiceTests
         await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
     }
 
+    [Fact]
+    public async Task GetCompanyByIdAsync_ReturnsCompany_WhenExists()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var existingCompany = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .Create();
 
+        _mockCompanyRepository.GetByIdAsync(companyId)
+            .Returns(existingCompany);
+
+        // Act
+        var result = await _service.GetCompanyByIdAsync(companyId, userId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(companyId);
+        await _mockCompanyRepository.Received(1).GetByIdAsync(companyId);
+    }
+
+    [Fact]
+    public async Task GetCompanyByIdAsync_ThrowsNotFound_WhenCompanyNotExists()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        _mockCompanyRepository.GetByIdAsync(companyId)
+            .Returns((Domain.Models.Company)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<CompanyNotFoundException>(
+            () => _service.GetCompanyByIdAsync(companyId, userId));
+
+    }
 }
