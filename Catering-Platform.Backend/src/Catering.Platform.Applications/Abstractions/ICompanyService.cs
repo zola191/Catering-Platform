@@ -10,5 +10,6 @@ public interface ICompanyService
     Task<CompanyViewModel> GetCompanyByIdAsync(Guid companyId, Guid userId);
     Task<CompanyViewModel> GetCompanyByTaxNumberAsync(string taxNumber, Guid userId);
     Task<IEnumerable<CompanyViewModel>> SearchCompaniesByNameAsync(SearchByNameRequest request, Guid userId);
+    Task<CompanyViewModel> UnblockCompanyAsync(Guid companyId, Guid userId);
     Task<PagedCompanyViewModel> GetCompaniesAsync(GetCompaniesRequest request, Guid userId);
 }

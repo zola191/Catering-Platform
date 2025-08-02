@@ -53,12 +53,34 @@ namespace Catering.Platform.API.Middlewares
                         Detail = tie.Message
                     },
 
+                    UnauthorizedAccessException uae => new ProblemDetails
+                    {
+                        Status = 403,
+                        Title = "Access denied",
+                        Detail = uae.Message
+                    },
+
+                    InvalidOperationException ioe when ioe.Message.Contains("already blocked") =>
+                    new ProblemDetails
+                    {
+                        Status = StatusCodes.Status409Conflict,
+                        Title = "Conflict",
+                        Detail = ioe.Message
+                    },
+
+                    InvalidOperationException ioe => new ProblemDetails
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Title = "Invalid operation",
+                        Detail = ioe.Message
+                    },
+
                     _ => new ProblemDetails
                     {
                         Status = 500,
                         Title = "Internal server error",
                         Detail = "An unexpected error occurred"
-                    }
+                    },
                 };
 
                 context.Response.StatusCode = problemDetails.Status.Value;

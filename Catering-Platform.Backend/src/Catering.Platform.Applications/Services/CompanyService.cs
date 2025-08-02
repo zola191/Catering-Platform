@@ -1,6 +1,7 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.ViewModels.Company;
 using Catering.Platform.Domain.Exceptions;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Company;
 using MediatR;
@@ -194,6 +195,41 @@ public class CompanyService : ICompanyService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error fetch company by name. CompanyName: {CompanyName}", request.Name);
+            throw;
+        }
+    }
+
+    public async Task<CompanyViewModel> UnblockCompanyAsync(Guid companyId, Guid userId)
+    {
+        try
+        {
+            var existingCompany = await _companyRepository.GetByIdAsync(companyId);
+            if (existingCompany == null)
+                throw CompanyNotFoundException.ById(companyId);
+
+            if (existingCompany.TenantId != userId)
+                throw new UnauthorizedAccessException("Company does not belong to this tenant");
+
+            if (existingCompany.IsBlocked == false)
+                throw new InvalidOperationException("Company is already Unblocked");
+
+            existingCompany.IsBlocked = false;
+            await _companyRepository.UpdateAsync(existingCompany);
+            return CompanyViewModel.MapToViewModel(existingCompany);
+        }
+        catch (CompanyNotFoundException ex)
+        {
+            _logger.LogError("Company not found. CompanyId: {CompanyId}", companyId);
+            throw;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized attempt to unblock company {CompanyId} by user {UserId}", companyId, userId);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetch Company. CompanyId: {CompanyId}", companyId);
             throw;
         }
     }
