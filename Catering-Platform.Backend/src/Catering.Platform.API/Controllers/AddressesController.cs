@@ -51,7 +51,7 @@ public class AddressesController : ControllerBase
 
     [HttpPut("{addressId:guid}")]
     public async Task<ActionResult> Update(
-    [FromRoute] Guid addressId, 
+    [FromRoute] Guid addressId,
     [FromBody] UpdateAddressViewModel request)
     {
         var validationResult = await _updateAdressViewModelValidator.ValidateAsync(request);
@@ -80,6 +80,21 @@ public class AddressesController : ControllerBase
     {
         var tenantId = Guid.Parse("0196763c-9106-7806-a03f-960a1dad80e7");
         var result = await _addressService.GetAddressByIdAsync(addressId, tenantId);
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search(
+    [FromQuery] Guid? tenantId,
+    [FromQuery] string query)
+    {
+        var request = new SearchByTextViewModel
+        {
+            Id = tenantId,
+            Query = query
+        };
+        // временно заглушкой передал tenantId вторым параметров в SearchAddressesByTextAsync
+        var result = await _addressService.SearchAddressesByTextAsync(request, tenantId);
         return Ok(result);
     }
 }

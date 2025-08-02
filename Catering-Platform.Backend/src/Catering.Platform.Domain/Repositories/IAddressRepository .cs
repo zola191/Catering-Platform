@@ -8,5 +8,6 @@ namespace Catering.Platform.Domain.Repositories
         void Update(Address address);
         void Delete(Address address);
         Task<Address?> GetByIdAsync(Guid addressId);
+        Task<IEnumerable<Address>> SearchByTextAsync(Guid? tenantId, string query);
     }
 }

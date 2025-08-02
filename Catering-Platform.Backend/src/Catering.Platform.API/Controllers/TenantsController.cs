@@ -3,7 +3,9 @@ using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Requests.Tenant;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Catering.Platform.API.Controllers
 {
@@ -28,12 +30,31 @@ namespace Catering.Platform.API.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult> Tenants()
         {
+            //чтение claim
+            //чтение Token
+            var context = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var token = ExtractJwtToken(HttpContext);
             var viewModels = await _tenantService.GetAllAsync();
             return Ok(viewModels);
         }
+
+        private string ExtractJwtToken(HttpContext httpContext)
+        {
+            var authorizationHeader = httpContext.Request.Headers["Authorization"].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
+            {
+                return null;
+            }
+
+            // Извлекаем токен из заголовка "Bearer <token>"
+            return authorizationHeader.Substring("Bearer ".Length);
+        }
+
 
         [HttpGet("{id:guid}")]
         public async Task<ActionResult> GetById([FromRoute] Guid id)

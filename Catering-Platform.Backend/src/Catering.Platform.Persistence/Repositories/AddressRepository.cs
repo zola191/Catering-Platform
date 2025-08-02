@@ -18,7 +18,45 @@ public class AddressRepository(ApplicationDbContext dbContext) : IAddressReposit
 
     public async Task<Address?> GetByIdAsync(Guid addressId)
     {
-        return await dbContext.Addresses.FirstOrDefaultAsync(f=>f.Id == addressId);
+        return await dbContext.Addresses.FirstOrDefaultAsync(f => f.Id == addressId);
+    }
+
+    public async Task<IEnumerable<Address>> SearchByTextAsync(Guid? tenantId, string query)
+    {
+        var baseQuery = dbContext.Addresses
+            .Where(f => f.SearchVector.Matches(EF.Functions.PhraseToTsQuery("russian", query)))
+            .Select(f => new
+            {
+                Address = f,
+                Rank = f.SearchVector.Rank(EF.Functions.PhraseToTsQuery("russian", query)),
+            })
+            .OrderByDescending(x => x.Rank)
+            .Select(x => x.Address)
+            .AsNoTracking();
+
+        var result = tenantId == null
+            ? await baseQuery.ToListAsync()
+            : await baseQuery.Where(a => a.TenantId == tenantId).ToListAsync();
+
+        if (!result.Any())
+        {
+            baseQuery = dbContext.Addresses
+                .Where(f => f.SearchVector.Matches(EF.Functions.ToTsQuery("russian", query)))
+                .Select(f => new
+                {
+                    Address = f,
+                    Rank = f.SearchVector.Rank(EF.Functions.ToTsQuery("russian", query)),
+                })
+                .OrderByDescending(x => x.Rank)
+                .Select(x => x.Address)
+                .AsNoTracking();
+
+            result = tenantId == null
+                ? await baseQuery.ToListAsync()
+                : await baseQuery.Where(a => a.TenantId == tenantId).ToListAsync();
+        }
+
+        return result;
     }
 
     public void Update(Address address)

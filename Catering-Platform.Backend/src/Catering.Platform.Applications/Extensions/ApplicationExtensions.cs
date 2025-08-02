@@ -1,7 +1,6 @@
 ﻿using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Pipelines;
 using Catering.Platform.Applications.Services;
-using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -16,9 +15,9 @@ public static class ApplicationExtensions
         services.AddScoped<IDishService, DishService>();
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<IAddressService, AddressService>();
+        services.AddScoped<IJwtService, JwtService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
     }
