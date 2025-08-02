@@ -63,4 +63,42 @@ public class CompanyService : ICompanyService
             throw;
         }
     }
+
+    public async Task<CompanyViewModel> UpdateCompanyAsync(UpdateCompanyRequest request, Guid userId)
+    {
+        try
+        {
+            var existingCompany = await _companyRepository.GetByIdAsync(request.CompanyId);
+
+            if (existingCompany == null)
+                throw new CompanyNotFoundException(request.CompanyId);
+
+            var existingAddress = await _addressRepository.GetByIdAsync(request.AddressId);
+
+            if (existingAddress == null)
+                throw new AddressNotFoundException(request.AddressId);
+
+            var company = UpdateCompanyRequest.MapToDomain(request, userId);
+            company.Address = existingAddress;
+
+            await _companyRepository.UpdateAsync(company);
+
+            return CompanyViewModel.MapToViewModel(company);
+        }
+        catch (CompanyNotFoundException ex)
+        {
+            _logger.LogError("Company not found. CompanyId: {CompanyId}", request.CompanyId);
+            throw;
+        }
+        catch (AddressNotFoundException ex)
+        {
+            _logger.LogError("Address for CompanyId: {CompanyId} not found. AddressId: {AddressId}", userId, request.AddressId);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error creating company. CompanyId: {CompanyId}", request.CompanyId);
+            throw;
+        }
+    }
 }
