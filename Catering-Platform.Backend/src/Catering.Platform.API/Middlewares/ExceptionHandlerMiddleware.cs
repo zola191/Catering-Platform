@@ -39,6 +39,13 @@ namespace Catering.Platform.API.Middlewares
                         Detail = tnfe.Message
                     },
 
+                    TenantHasActiveDataException tnfe => new ProblemDetails
+                    {
+                        Status = 404,
+                        Title = "Tenant is already unblocked",
+                        Detail = tnfe.Message
+                    },
+
                     TenantInactiveException tie => new ProblemDetails
                     {
                         Status = 403,

@@ -12,7 +12,7 @@ public record CreateDishRequest
     public bool IsAvailable { get; init; }
     public List<string> Ingredients { get; init; }
     public List<string> Allergens { get; init; }
-    public string PortionSize { get; init; }
+    public string? PortionSize { get; init; }
 
     public static Models.Dish MapToDomain(CreateDishRequest request)
     {

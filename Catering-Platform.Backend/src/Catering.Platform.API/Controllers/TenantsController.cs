@@ -62,6 +62,8 @@ namespace Catering.Platform.API.Controllers
             var viewModel = await _tenantService.GetByIdAsync(id);
             if (viewModel == null)
             {
+                _logger.LogWarning(
+                "Tenant is not found {Id}", id);
                 return NotFound();
             }
             return Ok(viewModel);
@@ -74,8 +76,8 @@ namespace Catering.Platform.API.Controllers
             var validationResult = await _createTenantRequestValidator.ValidateAsync(request);
             if (validationResult.IsValid == false)
             {
-                _logger.LogInformation(
-                "Validation failed for CreateTenantRequest. Errors: {ValidationErrors}",
+                _logger.LogWarning(
+                "Validation failed for CreateTenantRequest. Errors: {@ValidationErrors}",
                 validationResult.Errors);
                 return BadRequest(validationResult.Errors);
             }
@@ -99,7 +101,7 @@ namespace Catering.Platform.API.Controllers
             }
             catch (TenantNotFoundException ex)
             {
-                _logger.LogError(ex, "Tenant not found: {TenantId}", id);
+                _logger.LogWarning(ex, "Tenant not found: {TenantId}", id);
                 return NotFound(new ProblemDetails
                 {
                     Title = "Tenant not found",
@@ -135,8 +137,8 @@ namespace Catering.Platform.API.Controllers
             var validationResult = await validator.ValidateAsync(request);
             if (validationResult.IsValid == false)
             {
-                _logger.LogInformation(
-                "Validation failed for BlockTenantRequest. Errors: {ValidationErrors}",
+                _logger.LogWarning(
+                "Validation failed for BlockTenantRequest. Errors: {@ValidationErrors}",
                 validationResult.Errors);
                 return BadRequest(validationResult.Errors);
             }

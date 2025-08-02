@@ -70,16 +70,35 @@ namespace Catering.Platform.Applications.Services
 
         public async Task<TenantViewModel> UnblockTenantAsync(Guid id)
         {
-            var existingTenant = await _repository.GetByIdAsync(id);
-            if (existingTenant == null)
-                throw new TenantNotFoundException();
+            try
+            {
+                var existingTenant = await _repository.GetByIdAsync(id);
+                if (existingTenant == null)
+                    throw new TenantNotFoundException();
 
-            if (existingTenant.IsActive == true)
-                throw new TenantHasActiveDataException();
+                if (existingTenant.IsActive == true)
+                    throw new TenantHasActiveDataException();
 
-            await _repository.UnBlockAsync(existingTenant);
+                await _repository.UnBlockAsync(existingTenant);
 
-            return TenantViewModel.MapToViewModel(existingTenant);
+                return TenantViewModel.MapToViewModel(existingTenant);
+            }
+            catch (TenantNotFoundException ex) 
+            {
+                _logger.LogWarning(ex, "Attempt to unblock non-existent tenant: {TenantId}", id);
+                throw;
+            }
+            catch (TenantHasActiveDataException ex)
+            {
+                _logger.LogWarning(ex, "Attempt to unblock a tenant that is already unblocked: {TenantId}", id);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    "Unable to unblock tenant. See Details: {Details}", ex.Message);
+                throw;
+            }
         }
 
         public async Task DeleteAsync(Guid id)
