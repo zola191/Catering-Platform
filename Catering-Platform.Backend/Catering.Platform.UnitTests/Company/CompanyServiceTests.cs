@@ -250,4 +250,55 @@ public class CompanyServiceTests
         await Assert.ThrowsAsync<CompanyNotFoundException>(
             () => _service.GetCompanyByTaxNumberAsync(taxNumber, userId));
     }
+
+    [Fact]
+    public async Task SearchCompaniesByNameAsync_ReturnsCompanies_WhenFound()
+    {
+        // Arrange
+        var request = new SearchByNameRequest { Name = "Test" };
+        var userId = Guid.NewGuid();
+        var tenant = _fixture.Create<Domain.Models.Tenant>();
+        var companies = _fixture.CreateMany<Domain.Models.Company>(2).ToList();
+
+        _mockTenantRepository.GetByIdAsync(userId).Returns(tenant);
+        _mockCompanyRepository.SearchByNameAsync(userId, request.Name).Returns(companies);
+
+        // Act
+        var result = await _service.SearchCompaniesByNameAsync(request, userId);
+
+        // Assert
+        result.Should().HaveCount(2);
+        await _mockTenantRepository.Received(1).GetByIdAsync(userId);
+        await _mockCompanyRepository.Received(1).SearchByNameAsync(userId, request.Name);
+    }
+
+    [Fact]
+    public async Task SearchCompaniesByNameAsync_ThrowsTenantNotFound_WhenTenantNotExists()
+    {
+        // Arrange
+        var request = new SearchByNameRequest { Name = "Test" };
+        var userId = Guid.NewGuid();
+
+        _mockTenantRepository.GetByIdAsync(userId).Returns((Domain.Models.Tenant)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<TenantNotFoundException>(
+            () => _service.SearchCompaniesByNameAsync(request, userId));
+    }
+
+    [Fact]
+    public async Task SearchCompaniesByNameAsync_ThrowsCompanyNotFound_WhenNoCompaniesFound()
+    {
+        // Arrange
+        var request = new SearchByNameRequest { Name = "Test" };
+        var userId = Guid.NewGuid();
+        var tenant = _fixture.Create<Domain.Models.Tenant>();
+
+        _mockTenantRepository.GetByIdAsync(userId).Returns(tenant);
+        _mockCompanyRepository.SearchByNameAsync(userId, request.Name).Returns((List<Domain.Models.Company>)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<CompanyNotFoundException>(
+            () => _service.SearchCompaniesByNameAsync(request, userId));
+    }
 }
