@@ -36,6 +36,14 @@ namespace Catering.Platform.API.Controllers
             return Ok(companyViewModel);
         }
 
+        [HttpGet("by-tax-number")]
+        public async Task<IActionResult> GetByTaxNumber([FromQuery] string taxNumber)
+        {
+            var guid = Guid.NewGuid();
+            var company = await _companyService.GetCompanyByTaxNumberAsync(taxNumber, guid);
+            return Ok(company);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateCompanyRequest request)
         {
