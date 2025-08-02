@@ -85,9 +85,9 @@ public class AddressesControllerTests
         var tenantId = Guid.NewGuid();
         var request = _fixture.Create<CreateAddressViewModel>();
 
-        var failures = new List<ValidationFailure>
+        var failures = new List<FluentValidation.Results.ValidationFailure>
         {
-        new ValidationFailure("Zip", "Zip code must contain only digits")
+        new FluentValidation.Results.ValidationFailure("Zip", "Zip code must contain only digits")
         };
 
         var validationResult = new ValidationResult(failures);
@@ -244,7 +244,7 @@ public class AddressesControllerTests
 
         var validationResult = new ValidationResult(new[]
         {
-            new ValidationFailure("Country", "Country is required.")
+            new FluentValidation.Results.ValidationFailure("Country", "Country is required.")
         });
 
         _mockUpdateAdressViewModelValidator.ValidateAsync(request).Returns(validationResult);
@@ -254,7 +254,7 @@ public class AddressesControllerTests
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        var errors = Assert.IsType<List<ValidationFailure>>(badRequestResult.Value);
+        var errors = Assert.IsType<List<FluentValidation.Results.ValidationFailure>>(badRequestResult.Value);
         Assert.Single(errors);
         Assert.Equal("Country", errors[0].PropertyName);
     }

@@ -72,10 +72,10 @@ public class CompaniesControllerTests
         // Arrange
         var request = _fixture.Create<CreateCompanyRequest>();
 
-        var validationErrors = new List<ValidationFailure>
+        var validationErrors = new List<FluentValidation.Results.ValidationFailure>
         {
-            new ValidationFailure("Name", "Name is required"),
-            new ValidationFailure("TaxNumber", "TaxNumber is invalid")
+            new FluentValidation.Results.ValidationFailure("Name", "Name is required"),
+            new FluentValidation.Results.ValidationFailure("TaxNumber", "TaxNumber is invalid")
         };
         var validationResult = new ValidationResult(validationErrors);
 
@@ -128,9 +128,9 @@ public class CompaniesControllerTests
     {
         // Arrange
         var request = _fixture.Create<UpdateCompanyRequest>();
-        var validationErrors = new List<ValidationFailure>
+        var validationErrors = new List<FluentValidation.Results.ValidationFailure>
         {
-            new ValidationFailure("Name", "Name is required")
+            new FluentValidation.Results.ValidationFailure("Name", "Name is required")
         };
         var validationResult = new ValidationResult(validationErrors);
 

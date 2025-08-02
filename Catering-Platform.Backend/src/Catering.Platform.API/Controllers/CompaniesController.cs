@@ -104,7 +104,7 @@ namespace Catering.Platform.API.Controllers
             return Ok(companyViewModel);
         }
 
-        [HttpPatch("{companyId:guid}")]
+        [HttpPatch("{companyId:guid}/unblock")]
         public async Task<IActionResult> Unblock([FromRoute] Guid companyId)
         {
             //TODO извлечь из JWT
@@ -113,7 +113,7 @@ namespace Catering.Platform.API.Controllers
             return Ok(result);
         }
 
-        [HttpPatch("{companyId:guid}")]
+        [HttpPatch("{companyId:guid}/block")]
         public async Task<IActionResult> Block([FromRoute] Guid companyId)
         {
             //TODO извлечь из JWT

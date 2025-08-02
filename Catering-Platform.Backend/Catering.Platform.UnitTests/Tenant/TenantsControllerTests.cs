@@ -154,9 +154,9 @@ namespace Catering.Platform.UnitTests.Tenant
             var request = _fixture.Build<CreateTenantRequest>()
                 .With(f => f.Name, string.Empty)
                 .Create();
-            var validationResult = new ValidationResult(new List<ValidationFailure>
+            var validationResult = new ValidationResult(new List<FluentValidation.Results.ValidationFailure>
             {
-                new ValidationFailure("Name", "Name is required")
+                new FluentValidation.Results.ValidationFailure("Name", "Name is required")
             });
 
             _mockCreateTenantRequestValidatior.ValidateAsync(request)
@@ -168,7 +168,7 @@ namespace Catering.Platform.UnitTests.Tenant
             // Assert
             var actionResult = Assert.IsType<ActionResult<Guid>>(result);
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
-            var errors = Assert.IsAssignableFrom<IEnumerable<ValidationFailure>>(badRequestResult.Value);
+            var errors = Assert.IsAssignableFrom<IEnumerable<FluentValidation.Results.ValidationFailure>>(badRequestResult.Value);
 
             var errorMessages = errors.Select(e => e.ErrorMessage);
             Assert.Contains("Name is required", errorMessages);
@@ -205,9 +205,9 @@ namespace Catering.Platform.UnitTests.Tenant
             var request = _fixture.Build<UpdateTenantRequest>()
                 .With(f => f.Name, string.Empty)
                 .Create();
-            var validationResult = new ValidationResult(new List<ValidationFailure>
+            var validationResult = new ValidationResult(new List<FluentValidation.Results.ValidationFailure>
             {
-                new ValidationFailure("Name", "Name is required")
+                new FluentValidation.Results.ValidationFailure("Name", "Name is required")
             });
 
             _mockUpdateTenantRequestValidatior.ValidateAsync(request)
@@ -218,7 +218,7 @@ namespace Catering.Platform.UnitTests.Tenant
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var errors = Assert.IsAssignableFrom<IEnumerable<ValidationFailure>>(badRequestResult.Value);
+            var errors = Assert.IsAssignableFrom<IEnumerable<FluentValidation.Results.ValidationFailure>>(badRequestResult.Value);
 
             var errorMessages = errors.Select(e => e.ErrorMessage);
             Assert.Contains("Name is required", errorMessages);
@@ -319,7 +319,7 @@ namespace Catering.Platform.UnitTests.Tenant
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.NotEmpty((IEnumerable<ValidationFailure>)badRequestResult.Value);
+            Assert.NotEmpty((IEnumerable<FluentValidation.Results.ValidationFailure>)badRequestResult.Value);
         }
 
         [Fact]

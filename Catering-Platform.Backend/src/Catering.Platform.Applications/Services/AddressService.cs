@@ -4,6 +4,7 @@ using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Adress;
+using Catering.Platform.Domain.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -80,7 +81,7 @@ public class AddressService : IAddressService
             var address = existingTenant?.Addresses.FirstOrDefault(a => a.Id == addressId)
                               ?? throw NotFoundException.For<Address>(addressId);
 
-            _adressRepository.Delete(address);
+            _addressRepository.Delete(address);
             await _unitOfWork.SaveChangesAsync();
         }
         catch (NotFoundException ex)
