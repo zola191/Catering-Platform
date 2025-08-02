@@ -15,6 +15,7 @@ public static class PersistenceExtensions
         services.AddScoped<IDishRepository, DishRepository>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IAddressRepository, AddressRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddDbContext<ApplicationDbContext>(options =>

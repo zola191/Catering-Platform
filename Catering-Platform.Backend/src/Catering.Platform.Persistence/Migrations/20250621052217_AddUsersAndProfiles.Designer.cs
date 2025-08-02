@@ -3,6 +3,7 @@ using System;
 using Catering.Platform.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -12,9 +13,11 @@ using NpgsqlTypes;
 namespace Catering.Platform.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250621052217_AddUsersAndProfiles")]
+    partial class AddUsersAndProfiles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -230,7 +233,7 @@ namespace Catering.Platform.Persistence.Migrations
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime?>("UpdayedAt")
                         .ValueGeneratedOnUpdate()
                         .HasColumnType("timestamp with time zone");
 
@@ -271,14 +274,19 @@ namespace Catering.Platform.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CompanyId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("Customer_CompanyId");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("TaxNumber")
                         .HasColumnType("integer");
 
                     b.HasIndex("AddressId")
                         .IsUnique();
+
+                    b.ToTable("Users", t =>
+                        {
+                            t.Property("CompanyId")
+                                .HasColumnName("Customer_CompanyId");
+                        });
 
                     b.HasDiscriminator().HasValue("Customer");
                 });
@@ -288,8 +296,7 @@ namespace Catering.Platform.Persistence.Migrations
                     b.HasBaseType("Catering.Platform.Domain.Models.User");
 
                     b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("Supplier_CompanyId");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Position")
                         .IsRequired()
