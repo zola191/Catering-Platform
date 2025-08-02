@@ -4,7 +4,6 @@ using Catering.Platform.Domain.Exceptions;
 using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Adress;
-using Catering.Platform.Domain.Requests.Tenant;
 using Microsoft.Extensions.Logging;
 
 namespace Catering.Platform.Applications.Services;
@@ -52,6 +51,41 @@ public class AddressService : IAddressService
         // сделать generic exception для NotFoundException т.к. может быть и в других сервисах
         {
             _logger.LogError("Tenant not found. TenantId: {TenantId}", tenantId);
+            throw;
+        }
+        catch (TenantInactiveException ex)
+        {
+            _logger.LogError("Attempt to use inactive tenant. TenantId: {TenantId}", tenantId);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error creating address. TenantId: {TenantId}", tenantId);
+            throw;
+        }
+    }
+
+    public async Task DeleteAddressAsync(Guid addressId, Guid tenantId)
+    {
+        try
+        {
+            var existingTenant = await _tenantRepository.GetByIdWithAddresses(tenantId);
+
+            if (existingTenant == null)
+                throw NotFoundException.For<Tenant>(tenantId);
+
+            if (!existingTenant.IsActive)
+                throw new TenantInactiveException();
+
+            var address = existingTenant?.Addresses.FirstOrDefault(a => a.Id == addressId)
+                              ?? throw NotFoundException.For<Address>(addressId);
+
+            _adressRepository.Delete(address);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogError("{Name} not found. TenantId: {Id}", ex.EntityName, ex.EntityId);
             throw;
         }
         catch (TenantInactiveException ex)

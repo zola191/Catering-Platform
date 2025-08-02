@@ -1,11 +1,15 @@
 ﻿using AutoFixture;
+using Catering.Platform.Applications.Abstractions;
 using Catering.Platform.Applications.Services;
 using Catering.Platform.Domain.Exceptions;
+using Catering.Platform.Domain.Models;
 using Catering.Platform.Domain.Repositories;
 using Catering.Platform.Domain.Requests.Adress;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using System.Net;
 
 namespace Catering.Platform.UnitTests.Addresses;
 
@@ -22,8 +26,15 @@ public class AddressServiceTests
         _tenantRepo = Substitute.For<ITenantRepository>();
         _addressRepo = Substitute.For<IAddressRepository>();
         _unitOfWork = Substitute.For<IUnitOfWork>();
-        _logger = Substitute.For<ILogger<AddressService>>();
+        _logger = NullLogger<AddressService>.Instance;
         _fixture = new Fixture();
+
+        _fixture.Behaviors
+                .OfType<ThrowingRecursionBehavior>()
+                .ToList()
+                .ForEach(b => _fixture.Behaviors.Remove(b));
+
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         _service = new AddressService(
             _addressRepo,
@@ -113,5 +124,134 @@ public class AddressServiceTests
 
         // Assert
         await _unitOfWork.Received(1).SaveChangesAsync();
+    }
+
+    [Fact]
+    public async Task UpdateAddressAsync_ReturnsViewModel_WhenCorrectData()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var addressId = Guid.NewGuid();
+
+        var request = _fixture.Build<UpdateAddressViewModel>()
+            .With(x => x.Country, "Russia")
+            .With(x => x.StreetAndBuilding, "Lenina st., 10")
+            .With(x => x.Zip, "123456")
+            .With(x => x.City, "Moscow")
+            .With(x => x.Region, "Moscow Region")
+            .With(x => x.Comment, "Back entrance")
+            .With(x => x.Description, "Main office")
+            .Create();
+
+        var existingAddress = _fixture.Build<Domain.Models.Address>()
+            .With(a => a.Id, addressId)
+            .With(a => a.TenantId, tenantId)
+            .Without(a => a.Tenant)
+            .Create();
+
+        var existingTenant = _fixture.Build<Domain.Models.Tenant>()
+            .With(t => t.Id, tenantId)
+            .With(t => t.IsActive, true)
+            .With(t => t.Addresses, new List<Domain.Models.Address> { existingAddress })
+            .Create();
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(existingTenant);
+
+        // Act
+        var result = await _service.UpdateAddressAsync(addressId, request, tenantId);
+
+        // Assert
+        existingAddress.Country.Should().Be(request.Country);
+        existingAddress.StreetAndBuilding.Should().Be(request.StreetAndBuilding);
+        existingAddress.Zip.Should().Be(request.Zip);
+        existingAddress.City.Should().Be(request.City);
+        existingAddress.Region.Should().Be(request.Region);
+        existingAddress.Comment.Should().Be(request.Comment);
+        existingAddress.Description.Should().Be(request.Description);
+
+        result.Should().NotBeNull();
+        result.Id.Should().Be(existingAddress.Id);
+        result.TenantId.Should().Be(existingAddress.TenantId);
+        result.Country.Should().Be(existingAddress.Country);
+        result.StreetAndBuilding.Should().Be(existingAddress.StreetAndBuilding);
+        result.Zip.Should().Be(existingAddress.Zip);
+        result.City.Should().Be(existingAddress.City);
+        result.Region.Should().Be(existingAddress.Region);
+        result.Comment.Should().Be(existingAddress.Comment);
+        result.Description.Should().Be(existingAddress.Description);
+    }
+
+    [Fact]
+    public async Task UpdateAddressAsync_ThrowsAddressNotFoundException_WhenAddressDoesNotExist()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var addressId = Guid.NewGuid();
+
+        var request = _fixture.Create<UpdateAddressViewModel>();
+
+        var existingTenant = _fixture.Build<Domain.Models.Tenant>()
+            .With(t => t.Id, tenantId)
+            .With(t => t.IsActive, true)
+            .With(t => t.Addresses, new List<Domain.Models.Address>())
+            .Create();
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(existingTenant);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<NotFoundException>(
+            () => _service.UpdateAddressAsync(addressId, request, tenantId));
+
+        Assert.Contains("Address", exception.Message);
+        Assert.Equal(addressId, exception.EntityId);
+    }
+
+    [Fact]
+    public async Task DeleteAddressAsync_ExistingAddress_DeletesSuccessfully()
+    {
+        // Arrange
+        var tenantId = _fixture.Create<Guid>();
+        var addressId = _fixture.Create<Guid>();
+
+        var tenant = new Domain.Models.Tenant
+        {
+            Id = tenantId,
+            IsActive = true,
+            Addresses = new List<Domain.Models.Address>
+        {
+            new() { Id = addressId }
+        }
+        };
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(Task.FromResult(tenant));
+
+        // Act
+        await _service.DeleteAddressAsync(addressId, tenantId);
+
+        // Assert
+        _addressRepo.Received(1).Delete(Arg.Is<Domain.Models.Address>(a => a.Id == addressId));
+        _unitOfWork.Received(1).SaveChanges();
+    }
+
+    [Fact]
+    public async Task DeleteAddressAsync_AddressNotFound_ThrowsNotFoundException()
+    {
+        // Arrange
+        var tenantId = _fixture.Create<Guid>();
+        var addressId = _fixture.Create<Guid>();
+
+        var tenant = new Domain.Models.Tenant
+        {
+            Id = tenantId,
+            IsActive = true,
+            Addresses = new List<Domain.Models.Address>()
+        };
+
+        _tenantRepo.GetByIdWithAddresses(tenantId).Returns(Task.FromResult(tenant));
+
+        // Act & Assert
+        await _service.Invoking(s => s.DeleteAddressAsync(addressId, tenantId))
+            .Should().ThrowAsync<NotFoundException>()
+            .Where(ex => ex.EntityName == nameof(Address) && ex.EntityId.ToString() == addressId.ToString());
     }
 }
