@@ -389,6 +389,144 @@ public class CompanyServiceTests
     }
 
     [Fact]
+    public async Task BlockCompanyAsync_BlocksCompany_WhenNotBlocked()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .With(c => c.IsBlocked, false)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+        _mockCompanyRepository.UpdateAsync(Arg.Any<Domain.Models.Company>()).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.BlockCompanyAsync(companyId, userId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(companyId);
+        company.IsBlocked.Should().BeTrue();
+
+        await _mockCompanyRepository.Received(1).GetByIdAsync(companyId);
+        await _mockCompanyRepository.Received(1).UpdateAsync(company);
+    }
+
+    [Fact]
+    public async Task BlockCompanyAsync_ThrowsCompanyNotFound_WhenCompanyNotExists()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns((Domain.Models.Company)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<CompanyNotFoundException>(
+            () => _service.BlockCompanyAsync(companyId, userId));
+
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+    [Fact]
+    public async Task BlockCompanyAsync_ThrowsUnauthorized_WhenCompanyBelongsToOtherTenant()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, otherUserId)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _service.BlockCompanyAsync(companyId, userId));
+
+        ex.Message.Should().Be("Company does not belong to this tenant");
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+    [Fact]
+    public async Task BlockCompanyAsync_ThrowsInvalidOperation_WhenCompanyAlreadyBlocked()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .With(c => c.IsBlocked, true)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.BlockCompanyAsync(companyId, userId));
+
+        ex.Message.Should().Be("Company is already blocked");
+        await _mockCompanyRepository.DidNotReceive().UpdateAsync(Arg.Any<Domain.Models.Company>());
+    }
+
+    [Fact]
+    public async Task BlockCompanyAsync_Throws_WhenRepositoryFails()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .With(c => c.IsBlocked, false)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+        _mockCompanyRepository.UpdateAsync(Arg.Any<Domain.Models.Company>())
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(
+            () => _service.BlockCompanyAsync(companyId, userId));
+    }
+
+    [Fact]
+    public async Task BlockCompanyAsync_UpdatesUpdatedAt_WhenSuccessful()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var initialDate = DateTime.UtcNow.AddDays(-1);
+
+        var company = _fixture.Build<Domain.Models.Company>()
+            .With(c => c.Id, companyId)
+            .With(c => c.TenantId, userId)
+            .With(c => c.IsBlocked, false)
+            .With(c => c.UpdatedAt, initialDate)
+            .Create();
+
+        _mockCompanyRepository.GetByIdAsync(companyId).Returns(company);
+        _mockCompanyRepository.UpdateAsync(Arg.Any<Domain.Models.Company>()).Returns(Task.CompletedTask)
+            .AndDoes(c => c.Arg<Domain.Models.Company>().UpdatedAt = DateTime.UtcNow);
+
+        // Act
+        await _service.BlockCompanyAsync(companyId, userId);
+
+        // Assert
+        company.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
     public async Task UnblockCompanyAsync_ThrowsInvalidOperation_WhenCompanyAlreadyUnblocked()
     {
         // Arrange

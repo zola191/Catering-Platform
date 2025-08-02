@@ -28,6 +28,47 @@ public class CompanyService : ICompanyService
         _logger = logger;
     }
 
+    public async Task<CompanyViewModel> BlockCompanyAsync(Guid companyId, Guid userId)
+    {
+        try
+        {
+            var existingCompany = await _companyRepository.GetByIdAsync(companyId);
+            if (existingCompany == null)
+                throw CompanyNotFoundException.ById(companyId);
+
+            if (existingCompany.TenantId != userId)
+                throw new UnauthorizedAccessException("Company does not belong to this tenant");
+
+            if (existingCompany.IsBlocked)
+                throw new InvalidOperationException("Company is already blocked");
+
+            existingCompany.IsBlocked = true;
+            await _companyRepository.UpdateAsync(existingCompany);
+            return CompanyViewModel.MapToViewModel(existingCompany);
+        }
+        catch (CompanyNotFoundException ex)
+        {
+            _logger.LogError("Company not found. CompanyId: {CompanyId}", companyId);
+            throw;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized attempt to unblock company {CompanyId} by user {UserId}", companyId, userId);
+            throw;
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Attempt to block already blocked company. CompanyId: {CompanyId}",
+                companyId);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error fetch Company. CompanyId: {CompanyId}", companyId);
+            throw;
+        }
+    }
+
     public async Task<CompanyViewModel> CreateCompanyAsync(CreateCompanyRequest request, Guid userId)
     {
         try
